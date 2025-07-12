@@ -1,133 +1,159 @@
-/* Estilos generales */
 body {
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f9; /* Gris claro */
-    color: #333; /* Gris oscuro */
+  font-family: Arial, sans-serif;
+  background: #e6f3f7;
+  margin: 0;
+  padding: 40px;
 }
 
-/* Encabezado */
-header {
-    background-color: #6a1b9a; /* Violeta oscuro */
-    color: white;
-    text-align: center;
-    padding: 3rem 1rem;
+h2,
+h3 {
+  color: #007ea7;
 }
 
-header .logo h1 {
-    font-size: 3rem;
-    margin: 0;
+input,
+select,
+button {
+  display: block;
+  margin: 10px 0;
+  padding: 10px;
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
 }
 
-header h2 {
-    font-size: 1.8rem;
-    margin: 1rem 0;
+button {
+  background-color: #007ea7;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.2s;
 }
 
-header p {
-    font-size: 1.2rem;
-    margin: 1rem 0 2rem;
+button:hover {
+  background-color: #005f7a;
 }
 
-header .btn {
-    background-color: #8e24aa; /* Violeta más claro */
-    color: white;
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 1rem;
-    cursor: pointer;
+.hidden {
+  display: none !important;
 }
 
-header .btn:hover {
-    background-color: #9c27b0; /* Más brillante */
+.login-screen,
+.dashboard,
+.form-screen {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin: auto;
+  box-shadow: 0 2px 12px 0 #0001;
 }
 
-/* Sección de Servicios */
-#servicios {
-    text-align: center;
-    padding: 3rem 1rem;
+#etiquetasAsignadas {
+  background: #e6f3f7;
+  border: 1px solid #b2e0ee;
+  padding: 16px 20px;
+  margin-top: 18px;
+  border-radius: 8px;
+  color: #0a4a5c;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-#servicios h2 {
-    font-size: 2rem;
-    color: #6a1b9a;
-    margin-bottom: 2rem;
+#etiquetasAsignadas p {
+  margin: 0 0 10px 0;
+  font-weight: bold;
+  color: #005f7a;
+  text-align: center;
 }
 
-.servicios {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
+#etiquetasAsignadas ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: center;
 }
 
-.servicio {
-    background-color: white;
-    padding: 1.5rem;
-    margin: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    max-width: 300px;
+#etiquetasAsignadas li {
+  display: inline-block;
+  background: #c7eaf6;
+  margin: 3px 5px;
+  padding: 6px 14px;
+  border-radius: 5px;
+  font-weight: 600;
+  color: #005f7a;
 }
 
-.servicio h3 {
-    color: #6a1b9a;
-    margin-bottom: 0.5rem;
+label {
+  font-weight: bold;
+  margin-top: 12px;
+  color: #005f7a;
+  display: block;
 }
 
-/* Sección de Testimonios */
-#testimonios {
-    background-color: #e0e0e0; /* Gris suave */
-    text-align: center;
-    padding: 3rem 1rem;
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  .login-screen,
+  .dashboard,
+  .form-screen {
+    padding: 14px;
+    max-width: 99vw;
+  }
+
+  #etiquetasAsignadas {
+    max-width: 100%;
+    padding: 10px 6px;
+  }
+}#panelMisEtiquetas {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin: 30px auto;
+  box-shadow: 0 2px 12px 0 #0001;
+  min-height: 120px;
 }
 
-#testimonios h2 {
-    font-size: 2rem;
-    color: #6a1b9a;
-    margin-bottom: 2rem;
+.pedido-historico {
+  background: #e6f3f7;
+  border: 1px solid #b2e0ee;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  padding: 12px 18px;
 }
 
-.testimonios {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
+.pedido-fecha {
+  font-size: 0.97em;
+  color: #197082;
+  margin-bottom: 5px;
 }
 
-.testimonio {
-    max-width: 300px;
-    background-color: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin: 1rem;
+.pedido-lista {
+  margin-bottom: 4px;
 }
 
-/* Pie de Página */
-footer {
-    background-color: #333;
-    color: white;
-    text-align: center;
-    padding: 2rem 1rem;
+.etiquetas-historico {
+  display: inline-block;
+  margin-top: 2px;
 }
 
-footer a {
-    color: #9c27b0;
-    text-decoration: none;
+.chip-etiqueta {
+  display: inline-block;
+  background: #c7eaf6;
+  margin: 2px 3px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-weight: 600;
+  color: #005f7a;
+  font-size: 0.99em;
 }
 
-footer a:hover {
-    text-decoration: underline;
-}
-
-.sociales a {
-    margin: 0 0.5rem;
-    color: #9c27b0;
-    text-decoration: none;
-}
-
-.sociales a:hover {
-    text-decoration: underline;
+#panelMisEtiquetas button {
+  margin-top: 18px;
+  max-width: 160px;
+  font-size: 1em;
 }

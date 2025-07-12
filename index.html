@@ -1,65 +1,85 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fluxia - Soluciones de IA</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel del Empleado - GASTÓN TEC</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-    <!-- Encabezado -->
-    <header>
-        <div class="logo">
-            <h1>Fluxia</h1>
-        </div>
-        <h2>Innovación en Inteligencia Artificial y Automatización</h2>
-        <p>Transformamos tu negocio con soluciones adaptadas a tus necesidades.</p>
-        <a href="#servicios" class="btn">Explorar Servicios</a>
-    </header>
+  <!-- LOGIN -->
+  <div class="login-screen" id="loginScreen">
+    <h2>Ingreso</h2>
+    <input type="text" id="username" placeholder="Usuario" />
+    <input type="password" id="password" placeholder="Contraseña" />
+    <button onclick="login()">Ingresar</button>
+  </div>
 
-    <!-- Sección de Servicios -->
-    <section id="servicios">
-        <h2>Nuestros Servicios</h2>
-        <div class="servicios">
-            <div class="servicio">
-                <h3>Chatbots Personalizados</h3>
-                <p>Atiende clientes 24/7 con herramientas automatizadas y personalizadas.</p>
-            </div>
-            <div class="servicio">
-                <h3>Automatización de Procesos</h3>
-                <p>Optimiza tareas repetitivas y mejora la eficiencia empresarial.</p>
-            </div>
-            <div class="servicio">
-                <h3>Integración de Big Data</h3>
-                <p>Utiliza datos y aprendizaje automático para mejores decisiones.</p>
-            </div>
-        </div>
-    </section>
+  <!-- DASHBOARD PRINCIPAL -->
+  <div class="dashboard hidden" id="dashboard">
+    <h2>¡Hola, <span id="employeeName"></span>!</h2>
+    <p>¿Qué querés hacer hoy?</p>
+    <button id="kmFormBtn" onclick="showKmForm()">🚗 Cargar KM</button>
+    <button id="etiquetaFormBtn" onclick="showEtiquetaForm()">🏷️ Pedir Etiquetas</button>
+    <button id="adminBtn" class="hidden" onclick="showCargaEtiquetas()">🧰 Registrar Nuevas Etiquetas</button>
+    <!-- NUEVO BOTÓN MIS ETIQUETAS -->
+    <button id="misEtiquetasBtn" onclick="mostrarMisEtiquetas()">📋 Mis etiquetas</button>
+  </div>
 
-    <!-- Sección de Testimonios -->
-    <section id="testimonios">
-        <h2>Lo Que Dicen Nuestros Clientes</h2>
-        <div class="testimonios">
-            <div class="testimonio">
-                <p>"Fluxia transformó nuestra empresa con soluciones de IA que aumentaron la eficiencia en un 30%."</p>
-                <h4>- Laura González</h4>
-            </div>
-            <div class="testimonio">
-                <p>"Los chatbots personalizados nos ahorraron horas de trabajo manual."</p>
-                <h4>- Carlos Pérez</h4>
-            </div>
-        </div>
-    </section>
+  <!-- FORMULARIO CARGAR KM -->
+  <div class="form-screen hidden" id="kmForm">
+    <h3>Cargar Kilometraje</h3>
+    <label>Vehículo (patente)</label>
+    <select id="patente">
+      <option>ABC123</option>
+      <option>XYZ789</option>
+      <option>LMN456</option>
+    </select>
 
-    <!-- Pie de Página -->
-    <footer>
-        <p>Contacto: <a href="mailto:contacto@fluxia.com.ar">contacto@fluxia.com.ar</a></p>
-        <p>Síguenos en redes sociales:</p>
-        <div class="sociales">
-            <a href="#">Facebook</a>
-            <a href="#">Instagram</a>
-            <a href="#">LinkedIn</a>
-        </div>
-    </footer>
+    <label>Foto del odómetro (simulada)</label>
+    <input type="file" id="fotoKm" />
+
+    <label>Cargue el Km</label>
+    <input type="text" id="kmFinal" placeholder="Ingresá el KM actual" />
+
+    <button onclick="enviarKM()">Enviar</button>
+    <button onclick="volver()">Volver</button>
+  </div>
+
+  <!-- FORMULARIO PEDIR ETIQUETAS -->
+  <div class="form-screen hidden" id="etiquetaForm">
+    <h3>Pedir Etiquetas</h3>
+    <label>¿Cuántas necesitás?</label>
+    <input type="number" id="cantidadEtiquetas" min="1" />
+    <button onclick="enviarEtiqueta()">Enviar</button>
+    <button onclick="volver()">Volver</button>
+
+    <!-- MOSTRAR ETIQUETAS ASIGNADAS SOLO AL RECIBIR -->
+    <div id="etiquetasAsignadas" style="margin-top: 20px; display: none;">
+      <h4>🧾 Etiquetas asignadas:</h4>
+      <ul id="listaEtiquetas"></ul>
+    </div>
+  </div>
+
+  <!-- FORMULARIO CARGAR NUEVAS ETIQUETAS (solo admin) -->
+  <div class="form-screen hidden" id="registroEtiquetasForm">
+    <h3>Registrar Nuevas Etiquetas</h3>
+    <label>Etiqueta desde (número)</label>
+    <input type="number" id="etiquetaInicio" min="1" />
+
+    <label>Etiqueta hasta (número)</label>
+    <input type="number" id="etiquetaFin" min="1" />
+
+    <button onclick="registrarEtiquetas()">Registrar</button>
+    <button onclick="volver()">Volver</button>
+  </div>
+
+  <!-- NUEVO PANEL PARA EL HISTORIAL DE ETIQUETAS -->
+  <div id="panelMisEtiquetas" class="form-screen hidden"></div>
+
+  <script src="script.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,1705 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        980
+      ],
+      "id": "fc453afd-2a9e-42e6-9203-587bdeb94a2e",
+      "name": "Webhook",
+      "webhookId": "79ad7cbc-afc5-4d9b-967f-4f187d028a20"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Tickets",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "EMPLEADO": "={{ $('Webhook').item.json.body.usuario }}",
+            "CANTIDAD": "={{ $('Webhook').item.json.body.cantidad }}",
+            "FECHA": "={{ $('Webhook').item.json.body.fecha }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "EMPLEADO",
+              "displayName": "EMPLEADO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CANTIDAD",
+              "displayName": "CANTIDAD",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA",
+              "displayName": "FECHA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        40,
+        140
+      ],
+      "id": "6a04f326-3f5a-4efd-8ad0-c89ddee11b43",
+      "name": "PedidosTickets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "KM",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "TECNICO": "={{ $json.body.usuario }}",
+            "PATENTE": "={{ $json.body.patente }}",
+            "FOTO KM ": "={{ $json.body.foto_km }}",
+            "KM": "={{ $json.body.km_final }}",
+            "FECHA": "={{ $json.body.fecha }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "TECNICO",
+              "displayName": "TECNICO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PATENTE",
+              "displayName": "PATENTE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FOTO KM ",
+              "displayName": "FOTO KM ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "KM",
+              "displayName": "KM",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA",
+              "displayName": "FECHA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        60,
+        600
+      ],
+      "id": "0a5472db-3fa0-402d-9ce6-f97ab65b21ac",
+      "name": "RegistroKM",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 263103464,
+          "mode": "list",
+          "cachedResultName": "BaseTickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit#gid=263103464"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ESTADO",
+              "lookupValue": "Disponible"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        300,
+        140
+      ],
+      "id": "fa9bc450-45ed-4340-b50f-50a6ae6e3a5c",
+      "name": "FiltroDisponible",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 263103464,
+          "mode": "list",
+          "cachedResultName": "BaseTickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit#gid=263103464"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "ESTADO": "Usado",
+            "TECNICO": "={{ $json.tecnico }}",
+            "FECHA USO": "={{ $('Webhook').first().json.body.fecha }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "CODIGO",
+              "displayName": "CODIGO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ESTADO",
+              "displayName": "ESTADO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FECHA CARGA",
+              "displayName": "FECHA CARGA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "TECNICO",
+              "displayName": "TECNICO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FECHA USO",
+              "displayName": "FECHA USO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1080,
+        20
+      ],
+      "id": "bdb034f3-0037-4fd4-9e43-6c2dc6f3e492",
+      "name": "ActualizarBaseTickets",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a4e9eabd-6461-4774-862b-50fe9a219b76",
+              "leftValue": "={{ $json.ESTADO }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        140
+      ],
+      "id": "b642cd7e-dd25-41b3-920b-92aa9f2d2a9f",
+      "name": "¿Hay disponibles?"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { etiquetas: \"No hay tickets disponibles.\" } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        240
+      ],
+      "id": "a3c7e20f-5a57-473e-815b-c9b3f378ea20",
+      "name": "Msj no disponibles"
+    },
+    {
+      "parameters": {
+        "jsCode": "const datos = $('Webhook').first().json.body;\nconst cantidad = parseInt(datos.cantidad);\nconst tecnico = datos.usuario;\n\nconst disponibles = items\n  .filter(i =>\n    i.json[\"ESTADO\"] === \"Disponible\" &&\n    i.json[\"CODIGO\"] &&\n    i.json[\"row_number\"]\n  )\n  .sort((a, b) => a.json[\"row_number\"] - b.json[\"row_number\"])\n  .slice(0, cantidad);\n\n\n\nreturn disponibles.map(item => ({\n  json: {\n    row_number: item.json[\"row_number\"],\n    ticket: item.json[\"CODIGO\"],\n    tecnico\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        20
+      ],
+      "id": "e886e764-7343-4da0-8169-263c917ba217",
+      "name": "Enlistar disponibles",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const cantidadSolicitada = parseInt($('Webhook').first().json.body.cantidad);\nconst ticketsDisponibles = items;\n\nlet etiquetas = [];\n\nif (ticketsDisponibles.length < cantidadSolicitada) {\n  etiquetas = ticketsDisponibles.map(t => t.json.ticket);\n} else {\n  const ticketsAsignados = ticketsDisponibles.slice(0, cantidadSolicitada);\n  etiquetas = ticketsAsignados.map(t => t.json.ticket);\n}\n\nreturn [{ json: { etiquetas } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        20
+      ],
+      "id": "df7d7abc-aeeb-43e5-92a9-5552c217ef06",
+      "name": "Mjs x disponibles"
+    },
+    {
+      "parameters": {
+        "jsCode": "let etiquetas=$(\"Webhook\").first().json.body.etiquetas\nlet FechaCarga=$(\"Webhook\").first().json.body.fecha\nreturn etiquetas.map(etiquetas=>({\n  json:{\n    \"CODIGO\":etiquetas,\n      \"ESTADO\":\"Disponible\",\n      \"FECHA CARGA\":FechaCarga\n      \n  }\n} \n))\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        1040
+      ],
+      "id": "c7438d43-4539-44d0-ba3b-f479e20c8fcf",
+      "name": "Nvos codigos",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 263103464,
+          "mode": "list",
+          "cachedResultName": "BaseTickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit#gid=263103464"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CODIGO": "={{ $json.CODIGO }}",
+            "ESTADO": "={{ $json.ESTADO }}",
+            "FECHA CARGA": "={{ $json['FECHA CARGA'] }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "CODIGO",
+              "displayName": "CODIGO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ESTADO",
+              "displayName": "ESTADO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FECHA CARGA",
+              "displayName": "FECHA CARGA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TECNICO",
+              "displayName": "TECNICO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "FECHA USO",
+              "displayName": "FECHA USO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1400,
+        1040
+      ],
+      "id": "a64cd4bc-6459-4bcf-b7ba-177a0a6577e9",
+      "name": "Cargar nvos tickets",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"etiquetas\": {{ $json.etiquetas || [] }} }\n\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1580,
+        140
+      ],
+      "id": "86ca95b3-5435-412e-be05-04e663cdefe8",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "PEDIDO DE TICKETS\n",
+        "height": 420,
+        "width": 1820,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d17b5b43-39f8-4dc1-b97f-1952005a58d6",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "-Definir cuantos km es lo \"normal\"\n(futuros avisos)",
+        "height": 80,
+        "width": 150
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1240,
+        640
+      ],
+      "id": "926c424b-fbd3-4534-a8ec-a4f35662ae67",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let Conductor=$node[\"Webhook\"].json.body.usuario\nlet Patente=$node[\"Webhook\"].json.body.patente\nreturn[\n  {json:{\n    Patente,\n    Conductor,\n  }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        600
+      ],
+      "id": "93818c88-9e74-4c85-9976-91fc0a99869e",
+      "name": "DefinirVariables"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "list",
+          "cachedResultName": "PruebaN8N",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1787049688,
+          "mode": "list",
+          "cachedResultName": "Registro Vehiculos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit#gid=1787049688"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "PATENTE",
+              "lookupValue": "={{$json.Patente}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        480,
+        600
+      ],
+      "id": "b2e86ffd-4c97-45a8-b06a-5d60cc2fa4f1",
+      "name": "FiltrarPatente",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.funcion }}",
+                    "rightValue": "=pedir_etiquetas",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "14c1a9ae-d89b-499f-a193-f2e81e09de12"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pedir Etiquetas"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "addc150a-ac76-4c4a-a543-ee6bec3891c2",
+                    "leftValue": "={{ $json.body.funcion }}",
+                    "rightValue": "registro_km",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Resgistrar Km"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6d77aa54-5f67-4d7c-8e79-c112bbc3cfbf",
+                    "leftValue": "={{ $json.body.funcion }}",
+                    "rightValue": "registro_etiquetas_admin",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Agregar Etiquetas"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1321f6a0-175d-4856-8034-4d981df4d441",
+                    "leftValue": "={{ $json.body.funcion }}",
+                    "rightValue": "historial_etiquetas",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Historial Etiquetas"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -320,
+        960
+      ],
+      "id": "3109c42c-fe72-4b33-b469-c56b5590e8bd",
+      "name": "Funcion",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "let KmActual=$('FiltrarPatente').first().json.KILOMETRAJE;\nlet NvoKm=$node[\"Webhook\"].json.body.km_final;\nlet Km=NvoKm-KmActual\nlet RowNumber=$('FiltrarPatente').first().json.row_number\nlet Fum=$node[\"Webhook\"].json.body.fecha\nlet CategoriaKm=\"\"\nif (Km>200) {\n  CategoriaKm=\"Alto\";\n} else {\n  CategoriaKm=\"Normal\";\n}\nreturn{\n  json:{\n    NvoKm,\n    RowNumber,\n    Fum,\n    CategoriaKm\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        500
+      ],
+      "id": "8aec8363-316a-4ca0-bee7-0fde6ec1539e",
+      "name": "DatosNvoKm"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "list",
+          "cachedResultName": "PruebaN8N",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1787049688,
+          "mode": "list",
+          "cachedResultName": "Registro Vehiculos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit#gid=1787049688"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.RowNumber }}",
+            "KILOMETRAJE": "={{ $json.NvoKm }}",
+            "F.U.M": "={{ $json.Fum }}",
+            "ULTIMO CONDUCTOR": "={{ $node[\"DefinirVariables\"].json.Conductor }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "PATENTE",
+              "displayName": "PATENTE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "KILOMETRAJE",
+              "displayName": "KILOMETRAJE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "F.U.M",
+              "displayName": "F.U.M",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ULTIMO CONDUCTOR",
+              "displayName": "ULTIMO CONDUCTOR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1400,
+        500
+      ],
+      "id": "9ee894ba-319d-439b-990d-01fa6bd0cd41",
+      "name": "ActualizarKm",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Cargar Km",
+        "height": 380,
+        "width": 2260,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        480
+      ],
+      "id": "f57bb9c3-66d6-40d1-b1ca-e601ea54f864",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Cargar Tickets",
+        "height": 420,
+        "width": 2320,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        960
+      ],
+      "id": "f7a2c37f-0dbb-4a48-b1d2-e011f5d0e4c1",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ Mensaje: $json.Mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1940,
+        620
+      ],
+      "id": "8a5d8a6f-4e50-411a-9e0f-f64ff115afab",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "let mensaje=\"Registro guardado correctamente\"\nreturn{\n  json:{\n    mensaje\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        500
+      ],
+      "id": "6a0e2754-595e-4471-bb19-690b6fa65b52",
+      "name": "Mensaje"
+    },
+    {
+      "parameters": {
+        "jsCode": "let CantIn = items.filter(i => Object.keys(i.json || {}).length > 0).length;\n\nreturn [\n  {\n    json: {\n      CantIn\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        1040
+      ],
+      "id": "231b25b6-4ffd-4c1e-9538-637b819a79f9",
+      "name": "Cantidad inicial Disponibles"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "list",
+          "cachedResultName": "PruebaN8N",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 263103464,
+          "mode": "list",
+          "cachedResultName": "BaseTickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit#gid=263103464"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ESTADO",
+              "lookupValue": "Disponible"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        800,
+        1040
+      ],
+      "id": "018c0396-2c22-4acb-9928-6fda9cd12d5f",
+      "name": "FiltroDisponibles",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "list",
+          "cachedResultName": "PruebaN8N",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 263103464,
+          "mode": "list",
+          "cachedResultName": "BaseTickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit#gid=263103464"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ESTADO",
+              "lookupValue": "Disponible"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1620,
+        1040
+      ],
+      "id": "d6e072c3-5ecb-4264-93ba-995faebfc617",
+      "name": "FiltroDisponibles2",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ Mensaje: $json.Mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2100,
+        1120
+      ],
+      "id": "abf305b6-b691-4172-90ab-85c71d1e1744",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "jsCode": "let Mensaje=\"\"\nlet CantFin=items.length\nlet CantIngresada=$(\"Webhook\").first().json.body.etiquetas.length\nif ((CantFin-$(\"Cantidad inicial Disponibles\").first().json.CantIn)==CantIngresada) {\n  Mensaje=`Se registraron (${CantIngresada}) etiquetas correctamente`\n} else {\nMensaje=`Hubo un problema con la carga, revisar` \n}\nreturn{\n  json:{\n  Mensaje\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        1040
+      ],
+      "id": "2622c75e-fcab-46ca-9331-d0530eda52d1",
+      "name": "MensajeCarga"
+    },
+    {
+      "parameters": {
+        "jsCode": "let CantFiltrada=items.length\nreturn{\n  json:{\n    CantFiltrada\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        600
+      ],
+      "id": "8d660947-053c-4c13-960b-8152b97a1d21",
+      "name": "CantidadFiltrada"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8f7046a2-8502-4cee-b44a-49e2d0773113",
+              "leftValue": "={{ $json.CantFiltrada }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        600
+      ],
+      "id": "22cd5d95-3940-49af-abf2-3faf9e24c873",
+      "name": "¿Patente correcta?"
+    },
+    {
+      "parameters": {
+        "jsCode": "let mensaje=\"Patente no encontrada\"\nreturn{\n  json:{\n    mensaje\n  }\n    \n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        720
+      ],
+      "id": "fd24c8aa-a2f8-49e9-97a4-85fe29dece33",
+      "name": "PatenteNoEncontrada"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "list",
+          "cachedResultName": "PruebaN8N",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 263103464,
+          "mode": "list",
+          "cachedResultName": "BaseTickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit#gid=263103464"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "TECNICO",
+              "lookupValue": "={{ $('Webhook').item.json.body.usuario }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        40,
+        1520
+      ],
+      "id": "6ec9faa0-5d01-47aa-a2d4-171b0233ad4d",
+      "name": "FiltroPedidoTecnico",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ Mensaje: $json.Mensaje }) }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        460,
+        1520
+      ],
+      "id": "37f7498a-f537-42b4-bae4-cee67e27b302",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "content": "Historial etiquetas\n",
+        "height": 220,
+        "width": 700,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1460
+      ],
+      "id": "34818d7c-b6bd-423e-88de-dc26ae5ced0f",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "Al cargar nuevas etiquetas deberia comprobar que no se repiten en la base?",
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        900,
+        960
+      ],
+      "id": "547ce120-dcf8-43bb-ad2d-5604989f85a6",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Creamos un objeto para agrupar los tickets por fecha exacta\nconst agrupadoPorFecha = {};\n\nfor (const fila of items) {\n  const fecha = fila.json[\"FECHA USO\"];\n  const ticket = fila.json.CODIGO;\n\n  // Si no hay un array para esta fecha aún, lo creamos\n  if (!agrupadoPorFecha[fecha]) {\n    agrupadoPorFecha[fecha] = [];\n  }\n\n  // Agregamos el ticket a la lista de esa fecha\n  agrupadoPorFecha[fecha].push(ticket);\n}\n\n// Ahora construimos el mensaje como un string\nlet Mensaje = \"\";\n\nfor (const fecha in agrupadoPorFecha) {\n  const tickets = agrupadoPorFecha[fecha];\n  Mensaje += `Fecha: ${fecha}\\nTickets: ${tickets.join(\", \")}\\n\\n`;\n}\n\n// Devolvemos todo en una sola variable llamada Mensaje\nreturn [\n  {\n    json: {\n      Mensaje\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        1520
+      ],
+      "id": "fc2cd4b9-c3b3-44ae-b9ef-468f7b73a756",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "let Existen = \"\"\n// Códigos que querés agregar (ejemplo recibido del webhook o de un nodo anterior)\nconst nuevosCodigos =$('Webhook').first().json.body.etiquetas || []; // ej: [\"ETQ-001\", \"ETQ-020\", \"ETQ-030\"]\n\n// Obtener los códigos ya existentes en la hoja\nconst codigosExistentes = items.map(item => item.json.CODIGO);\n\n// Filtrar los que ya existen\nconst duplicados = nuevosCodigos.filter(codigo => codigosExistentes.includes(codigo));\n\nif (duplicados.length > 0) {\n  // Si hay alguno repetido, devolver error y frenar\n  let Existen=\"si\"\n  return [\n    {\n      json: {\n        Existen\n      }\n    }\n  ];\n} else {\n  // Si no hay repetidos, devolver los nuevos para continuar\n  let Existen=\"no\"\n  return [\n    {\n      json: {\n        Existen\n      }\n    }\n  ];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        1140
+      ],
+      "id": "ec61be69-ebdd-4b14-b970-9b45ca3e8c4e",
+      "name": "Existen"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eb849760-c0ce-4ad8-95fa-067e63fb972d",
+              "leftValue": "={{ $json.Existen }}",
+              "rightValue": "no",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        1140
+      ],
+      "id": "a8e39d7b-826a-4fe6-828e-b62e01199319",
+      "name": "¿Existen?"
+    },
+    {
+      "parameters": {
+        "jsCode": "let Mensaje=\"Hay codigos que ya existen\"\nreturn {\n  json:{\n    Mensaje\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        1220
+      ],
+      "id": "fcd75c89-eee5-4d83-bf3f-16027e5efafa",
+      "name": "MsjRepetidos"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0",
+          "mode": "list",
+          "cachedResultName": "PruebaN8N",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 263103464,
+          "mode": "list",
+          "cachedResultName": "BaseTickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_dldIxU91qtX-KsOusVYqGRs4JJ4oj0NKQdrvE3ia0/edit#gid=263103464"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        80,
+        1140
+      ],
+      "id": "c5fcb43e-0309-4c41-a72b-0ddb761fd7ca",
+      "name": "VerBase",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "FMbxat29sZxlWAWc",
+          "name": "Google Sheets account 4"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Respond to Webhook": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ],
+    "Mjs x disponibles": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Funcion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PedidosTickets": {
+      "main": [
+        [
+          {
+            "node": "FiltroDisponible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RegistroKM": {
+      "main": [
+        [
+          {
+            "node": "DefinirVariables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FiltroDisponible": {
+      "main": [
+        [
+          {
+            "node": "¿Hay disponibles?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ActualizarBaseTickets": {
+      "main": [
+        [
+          {
+            "node": "Mjs x disponibles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay disponibles?": {
+      "main": [
+        [
+          {
+            "node": "Enlistar disponibles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Msj no disponibles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enlistar disponibles": {
+      "main": [
+        [
+          {
+            "node": "ActualizarBaseTickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mjs x disponibles": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nvos codigos": {
+      "main": [
+        [
+          {
+            "node": "Cargar nvos tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Msj no disponibles": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DefinirVariables": {
+      "main": [
+        [
+          {
+            "node": "FiltrarPatente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FiltrarPatente": {
+      "main": [
+        [
+          {
+            "node": "CantidadFiltrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Funcion": {
+      "main": [
+        [
+          {
+            "node": "PedidosTickets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RegistroKM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "VerBase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "FiltroPedidoTecnico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DatosNvoKm": {
+      "main": [
+        [
+          {
+            "node": "ActualizarKm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cargar nvos tickets": {
+      "main": [
+        [
+          {
+            "node": "FiltroDisponibles2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ActualizarKm": {
+      "main": [
+        [
+          {
+            "node": "Mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensaje": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cantidad inicial Disponibles": {
+      "main": [
+        [
+          {
+            "node": "Nvos codigos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FiltroDisponibles": {
+      "main": [
+        [
+          {
+            "node": "Cantidad inicial Disponibles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FiltroDisponibles2": {
+      "main": [
+        [
+          {
+            "node": "MensajeCarga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MensajeCarga": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CantidadFiltrada": {
+      "main": [
+        [
+          {
+            "node": "¿Patente correcta?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Patente correcta?": {
+      "main": [
+        [
+          {
+            "node": "DatosNvoKm",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PatenteNoEncontrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PatenteNoEncontrada": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FiltroPedidoTecnico": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Existen": {
+      "main": [
+        [
+          {
+            "node": "¿Existen?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Existen?": {
+      "main": [
+        [
+          {
+            "node": "FiltroDisponibles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MsjRepetidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MsjRepetidos": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VerBase": {
+      "main": [
+        [
+          {
+            "node": "Existen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "45bff6be-8ca3-4baf-9978-dcf8e26ab5b9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "68a4302b2237cf4ac27df78f000bc47e28b92e78b2587c1f72cb08ae64bb14c6"
+  },
+  "id": "CRlBTqQG7BoHxjvA",
+  "tags": []
+}
