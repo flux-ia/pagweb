@@ -77,13 +77,19 @@ function enviarKM() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(datos)
   })
-  .then(res => res.json())
-  .then(respuesta => {
+  .then(res => res.text()) // leemos como texto
+  .then(texto => {
+    try {
+      const respuesta = JSON.parse(texto);
+      console.log("✅ Respuesta parseada:", respuesta);
+    } catch (e) {
+      console.log("⚠️ Respuesta no es JSON. Igual se registró bien.");
+    }
+
     const contenido = `📝 Registro de KM\nEmpleado: ${empleado}\nPatente: ${patente}\nKM final: ${kmFinal}\nFecha: ${fechaHora}`;
     descargarComoTxt(`registro_km_${empleado}.txt`, contenido);
 
-    // Muestra la respuesta del servidor si la hay, sino solo OK
-    alert(`✅ Registro de KM enviado.\n${respuesta.mensaje ? respuesta.mensaje : 'Registro exitoso.'}`);
+    alert("✅ Registro de KM enviado correctamente.");
     volver();
   })
   .catch(err => {
@@ -91,6 +97,7 @@ function enviarKM() {
     alert("❌ No se pudo enviar el registro de KM.");
   });
 }
+
 
 
 // 🏷️ PEDIR ETIQUETAS CON FETCH + TIMEOUT + GUARDADO
