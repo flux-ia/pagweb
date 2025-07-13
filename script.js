@@ -106,12 +106,15 @@ function enviarEtiqueta() {
   const cantidad = parseInt(document.getElementById('cantidadEtiquetas').value);
   const fechaHora = new Date().toLocaleString();
 
+  const estadoDiv = document.getElementById("estadoPedido");
+  estadoDiv.textContent = ""; // limpiar previo
+
   if (isNaN(cantidad) || cantidad < 1) {
     alert("¡Poné una cantidad válida!");
     return;
   }
 
-  alert("⏳ Enviando pedido al servidor... Esperando respuesta hasta 30 segundos...");
+  estadoDiv.textContent = "⏳ Enviando pedido al servidor... Esperando respuesta hasta 30 segundos...";
 
   const timeout = new Promise((_, reject) => {
     setTimeout(() => reject(new Error("⏰ Tiempo agotado: no se recibieron etiquetas.")), 30000);
@@ -130,6 +133,8 @@ function enviarEtiqueta() {
 
   Promise.race([fetchRequest, timeout])
     .then(data => {
+      estadoDiv.textContent = ""; // limpiar
+
       const etiquetas = Array.isArray(data.etiquetas)
         ? data.etiquetas
         : (typeof data.etiquetas === "string" ? [data.etiquetas] : []);
@@ -138,13 +143,9 @@ function enviarEtiqueta() {
       const listaUl = document.getElementById("listaEtiquetas");
       listaUl.innerHTML = "";
 
-      // ⚠️ VERIFICACIÓN de etiquetas inválidas tipo "No hay tickets disponibles"
-      if (
-        etiquetas.length === 0 ||
-        (etiquetas.length === 1 && etiquetas[0].toLowerCase().includes("no hay"))
-      ) {
+      if (etiquetas.length === 0) {
         etiquetasDiv.style.display = "none";
-        alert("⚠️ No hay etiquetas disponibles.");
+        alert("⚠️ No se recibieron etiquetas desde el servidor.");
         return;
       }
 
@@ -165,6 +166,7 @@ function enviarEtiqueta() {
       volver();
     })
     .catch(err => {
+      estadoDiv.textContent = "";
       console.error("❌ Error al conectar con n8n:", err);
       alert(err.message || "❌ Error desconocido al pedir etiquetas.");
     });
