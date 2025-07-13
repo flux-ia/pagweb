@@ -130,19 +130,21 @@ function enviarEtiqueta() {
 
   Promise.race([fetchRequest, timeout])
     .then(data => {
-      // Aquí nos aseguramos de que data.etiquetas sea siempre un array
       const etiquetas = Array.isArray(data.etiquetas)
         ? data.etiquetas
         : (typeof data.etiquetas === "string" ? [data.etiquetas] : []);
 
       const etiquetasDiv = document.getElementById("etiquetasAsignadas");
       const listaUl = document.getElementById("listaEtiquetas");
-
       listaUl.innerHTML = "";
 
-      if (etiquetas.length === 0) {
+      // ⚠️ VERIFICACIÓN de etiquetas inválidas tipo "No hay tickets disponibles"
+      if (
+        etiquetas.length === 0 ||
+        (etiquetas.length === 1 && etiquetas[0].toLowerCase().includes("no hay"))
+      ) {
         etiquetasDiv.style.display = "none";
-        alert("⚠️ No se recibieron etiquetas desde el servidor.");
+        alert("⚠️ No hay etiquetas disponibles.");
         return;
       }
 
@@ -167,7 +169,6 @@ function enviarEtiqueta() {
       alert(err.message || "❌ Error desconocido al pedir etiquetas.");
     });
 }
-
 
 
 // 🚩 MOSTRAR HISTORIAL DE ETIQUETAS DESDE BACKEND
