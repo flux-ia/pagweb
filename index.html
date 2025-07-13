@@ -24,7 +24,6 @@
     <button id="kmFormBtn" onclick="showKmForm()">🚗 Cargar KM</button>
     <button id="etiquetaFormBtn" onclick="showEtiquetaForm()">🏷️ Pedir Etiquetas</button>
     <button id="adminBtn" class="hidden" onclick="showCargaEtiquetas()">🧰 Registrar Nuevas Etiquetas</button>
-    <!-- NUEVO BOTÓN MIS ETIQUETAS -->
     <button id="misEtiquetasBtn" onclick="mostrarMisEtiquetas()">📋 Mis etiquetas</button>
   </div>
 
@@ -53,6 +52,10 @@
     <h3>Pedir Etiquetas</h3>
     <label>¿Cuántas necesitás?</label>
     <input type="number" id="cantidadEtiquetas" min="1" />
+    
+    <!-- 📢 Nuevo estado visual -->
+    <div id="estadoPedido" style="margin-top:10px; color:#444; font-weight:bold;"></div>
+
     <button onclick="enviarEtiqueta()">Enviar</button>
     <button onclick="volver()">Volver</button>
 
