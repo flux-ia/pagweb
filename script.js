@@ -106,15 +106,12 @@ function enviarEtiqueta() {
   const cantidad = parseInt(document.getElementById('cantidadEtiquetas').value);
   const fechaHora = new Date().toLocaleString();
 
-  const estadoDiv = document.getElementById("estadoPedido");
-  estadoDiv.textContent = ""; // limpiar previo
-
   if (isNaN(cantidad) || cantidad < 1) {
     alert("¡Poné una cantidad válida!");
     return;
   }
 
-  estadoDiv.textContent = "⏳ Enviando pedido al servidor... Esperando respuesta hasta 30 segundos...";
+  alert("⏳ Enviando pedido al servidor... Esperando respuesta hasta 30 segundos...");
 
   const timeout = new Promise((_, reject) => {
     setTimeout(() => reject(new Error("⏰ Tiempo agotado: no se recibieron etiquetas.")), 30000);
@@ -133,14 +130,22 @@ function enviarEtiqueta() {
 
   Promise.race([fetchRequest, timeout])
     .then(data => {
-      estadoDiv.textContent = ""; // limpiar
+      let etiquetas = [];
 
-      const etiquetas = Array.isArray(data.etiquetas)
-        ? data.etiquetas
-        : (typeof data.etiquetas === "string" ? [data.etiquetas] : []);
+      if (Array.isArray(data.etiquetas)) {
+        etiquetas = data.etiquetas;
+      } else if (typeof data.etiquetas === "string") {
+        if (data.etiquetas.toLowerCase().includes("no hay")) {
+          alert("⚠️ No hay etiquetas disponibles en el sistema.");
+          return;
+        } else {
+          etiquetas = [data.etiquetas];
+        }
+      }
 
       const etiquetasDiv = document.getElementById("etiquetasAsignadas");
       const listaUl = document.getElementById("listaEtiquetas");
+
       listaUl.innerHTML = "";
 
       if (etiquetas.length === 0) {
@@ -166,11 +171,11 @@ function enviarEtiqueta() {
       volver();
     })
     .catch(err => {
-      estadoDiv.textContent = "";
       console.error("❌ Error al conectar con n8n:", err);
       alert(err.message || "❌ Error desconocido al pedir etiquetas.");
     });
 }
+
 
 
 // 🚩 MOSTRAR HISTORIAL DE ETIQUETAS DESDE BACKEND
