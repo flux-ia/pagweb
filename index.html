@@ -52,8 +52,8 @@
     <h3>Pedir Etiquetas</h3>
     <label>¿Cuántas necesitás?</label>
     <input type="number" id="cantidadEtiquetas" min="1" />
-    
-    <!-- 📢 Nuevo estado visual -->
+
+    <!-- Estado visual mientras se procesa -->
     <div id="estadoPedido" style="margin-top:10px; color:#444; font-weight:bold;"></div>
 
     <button onclick="enviarEtiqueta()">Enviar</button>
@@ -79,8 +79,15 @@
     <button onclick="volver()">Volver</button>
   </div>
 
-  <!-- NUEVO PANEL PARA EL HISTORIAL DE ETIQUETAS -->
+  <!-- PANEL PARA EL HISTORIAL DE ETIQUETAS -->
   <div id="panelMisEtiquetas" class="form-screen hidden"></div>
+
+  <!-- PANEL UNIVERSAL PARA MENSAJES -->
+  <div id="panelMensajes" class="form-screen hidden">
+    <h3>Resultado</h3>
+    <div id="contenidoMensaje" style="margin: 10px 0;"></div>
+    <button onclick="volver()">Volver</button>
+  </div>
 
   <script src="script.js"></script>
 </body>
