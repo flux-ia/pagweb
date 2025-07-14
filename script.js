@@ -9,9 +9,9 @@ function login() {
   const username = document.getElementById('username').value.trim().toLowerCase();
   const pass = document.getElementById('password').value.trim();
 
-  if (!username || !pass) return alert("Por favor completá ambos campos.");
-  if (!(username in usuarios)) return alert("Usuario no registrado.");
-  if (usuarios[username] !== pass) return alert("Contraseña incorrecta.");
+  if (!username || !pass) return mostrarMensaje("❗ Por favor completá ambos campos.", true);
+  if (!(username in usuarios)) return mostrarMensaje("🚫 Usuario no registrado.", true);
+  if (usuarios[username] !== pass) return mostrarMensaje("🔑 Contraseña incorrecta.", true);
 
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
@@ -47,6 +47,8 @@ function volver() {
   document.getElementById('kmForm').classList.add('hidden');
   document.getElementById('etiquetaForm').classList.add('hidden');
   document.getElementById('registroEtiquetasForm')?.classList.add('hidden');
+  document.getElementById('panelMisEtiquetas')?.classList.add('hidden');
+  document.getElementById('panelMensajes')?.classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
 }
 
@@ -58,7 +60,7 @@ function enviarKM() {
   const fechaHora = new Date().toLocaleString();
 
   if (!patente || !kmFinal) {
-    alert("Completá todos los campos.");
+    mostrarMensaje("🚗 Completá todos los campos para registrar KM.", true);
     return;
   }
 
@@ -70,19 +72,23 @@ function enviarKM() {
     fecha: fechaHora
   };
 
+  mostrarMensaje("⏳ Enviando registro de KM al servidor...");
+
   fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(datos)
   })
-  .then(res => res.text())
-  .then(texto => {
-    alert("✅ Registro de KM enviado correctamente.");
-    volver();
+  .then(() => {
+    mostrarMensaje(`✅ Registro de KM enviado correctamente.<br><br>
+    <b>Empleado:</b> ${empleado}<br>
+    <b>Patente:</b> ${patente}<br>
+    <b>KM Final:</b> ${kmFinal}<br>
+    <b>Fecha:</b> ${fechaHora}`);
   })
   .catch(err => {
     console.error("❌ Error al enviar KM:", err);
-    alert("❌ No se pudo enviar el registro de KM.");
+    mostrarMensaje("❌ No se pudo enviar el registro de KM.", true);
   });
 }
 
@@ -93,11 +99,11 @@ function enviarEtiqueta() {
   const fechaHora = new Date().toLocaleString();
 
   if (isNaN(cantidad) || cantidad < 1) {
-    alert("¡Poné una cantidad válida!");
+    mostrarMensaje("⚠️ ¡Poné una cantidad válida!", true);
     return;
   }
 
-  alert("⏳ Enviando pedido al servidor...");
+  mostrarMensaje("⏳ Enviando pedido al servidor... Esperando respuesta...");
 
   const timeout = new Promise((_, reject) => {
     setTimeout(() => reject(new Error("⏰ Tiempo agotado: no se recibieron etiquetas.")), 30000);
@@ -122,7 +128,7 @@ function enviarEtiqueta() {
 
       if (!data.etiquetas || (Array.isArray(data.etiquetas) && data.etiquetas.length === 0)) {
         etiquetasDiv.style.display = "none";
-        alert("⚠️ No hay etiquetas disponibles en este momento.");
+        mostrarMensaje("⚠️ No hay etiquetas disponibles en este momento.", true);
         return;
       }
 
@@ -138,15 +144,40 @@ function enviarEtiqueta() {
       });
 
       localStorage.setItem("etiquetasAsignadas", JSON.stringify(etiquetas));
+
+      mostrarMensaje(`✅ Pedido procesado correctamente.<br>
+        <b>Cantidad:</b> ${cantidad}<br>
+        <b>Fecha:</b> ${fechaHora}<br><br>
+        <b>Etiquetas asignadas:</b><br>${etiquetas.join("<br>")}`);
     })
     .catch(err => {
       console.error("❌ Error al conectar con n8n:", err);
-      alert(err.message || "❌ Error desconocido al pedir etiquetas.");
+      mostrarMensaje(err.message || "❌ Error desconocido al pedir etiquetas.", true);
     });
 }
 
-// Si querés que también se eliminen los .txt del resto de funciones como registrarEtiquetas, avisame y te lo ajusto 😄
+// ✅ PANEL DE MENSAJES
+function mostrarMensaje(mensaje, esError = false) {
+  const panel = document.getElementById("panelMensajes");
+  const contenido = document.getElementById("contenidoMensaje");
 
+  contenido.innerHTML = mensaje;
+  contenido.style.color = esError ? "red" : "black";
+
+  ocultarTodosLosFormularios();
+  panel.classList.remove("hidden");
+}
+
+function ocultarTodosLosFormularios() {
+  document.getElementById('kmForm').classList.add('hidden');
+  document.getElementById('etiquetaForm').classList.add('hidden');
+  document.getElementById('registroEtiquetasForm')?.classList.add('hidden');
+  document.getElementById('panelMisEtiquetas')?.classList.add('hidden');
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('panelMensajes')?.classList.add('hidden');
+}
+
+// 🚀 INIT
 document.addEventListener("DOMContentLoaded", () => {
   const loginInputs = [document.getElementById("username"), document.getElementById("password")];
   loginInputs.forEach(input => {
