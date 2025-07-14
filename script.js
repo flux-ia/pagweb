@@ -155,6 +155,47 @@ function enviarEtiqueta() {
       mostrarMensaje(err.message || "❌ Error desconocido al pedir etiquetas.", true);
     });
 }
+// ✅ REGISTRAR NUEVAS ETIQUETAS (ADMIN)
+function registrarEtiquetas() {
+  const desde = parseInt(document.getElementById("etiquetaInicio").value);
+  const hasta = parseInt(document.getElementById("etiquetaFin").value);
+  const empleado = document.getElementById('employeeName').textContent;
+  const fechaHora = new Date().toLocaleString();
+
+  if (isNaN(desde) || isNaN(hasta) || desde < 1 || hasta < desde) {
+    mostrarMensaje("❌ Por favor ingresá un rango válido.", true);
+    return;
+  }
+
+  const etiquetas = [];
+  for (let i = desde; i <= hasta; i++) {
+    etiquetas.push(`ETQ-${String(i).padStart(3, '0')}`);
+  }
+
+  const datos = {
+    funcion: "registro_etiquetas_admin",
+    usuario: empleado,
+    fecha: fechaHora,
+    etiquetas: etiquetas
+  };
+
+  mostrarMensaje("⏳ Registrando nuevas etiquetas...");
+
+  fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(datos)
+  })
+  .then(res => res.json())
+  .then(respuesta => {
+    const lista = etiquetas.join("<br>");
+    mostrarMensaje(`✅ Se registraron <b>${etiquetas.length}</b> etiquetas:<br><br>${lista}<br><br><b>Fecha:</b> ${fechaHora}`);
+  })
+  .catch(err => {
+    console.error("❌ Error al registrar etiquetas:", err);
+    mostrarMensaje("❌ No se pudo registrar las etiquetas en el servidor.", true);
+  });
+}
 
 // ✅ PANEL DE MENSAJES
 function mostrarMensaje(mensaje, esError = false) {
