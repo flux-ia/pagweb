@@ -32,13 +32,11 @@ function showEtiquetaForm() {
   document.getElementById('dashboard').classList.add('hidden');
   document.getElementById('etiquetaForm').classList.remove('hidden');
 
-  // SIEMPRE OCULTAR y limpiar el panel al abrir el formulario
   const etiquetasDiv = document.getElementById("etiquetasAsignadas");
   const listaUl = document.getElementById("listaEtiquetas");
   etiquetasDiv.style.display = "none";
   if (listaUl) listaUl.innerHTML = "";
 }
-
 
 function showCargaEtiquetas() {
   document.getElementById('dashboard').classList.add('hidden');
@@ -77,18 +75,8 @@ function enviarKM() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(datos)
   })
-  .then(res => res.text()) // leemos como texto
+  .then(res => res.text())
   .then(texto => {
-    try {
-      const respuesta = JSON.parse(texto);
-      console.log("✅ Respuesta parseada:", respuesta);
-    } catch (e) {
-      console.log("⚠️ Respuesta no es JSON. Igual se registró bien.");
-    }
-
-    const contenido = `📝 Registro de KM\nEmpleado: ${empleado}\nPatente: ${patente}\nKM final: ${kmFinal}\nFecha: ${fechaHora}`;
-    descargarComoTxt(`registro_km_${empleado}.txt`, contenido);
-
     alert("✅ Registro de KM enviado correctamente.");
     volver();
   })
@@ -98,9 +86,7 @@ function enviarKM() {
   });
 }
 
-
-
-// 🏷️ PEDIR ETIQUETAS CON FETCH + TIMEOUT + GUARDADO
+// 🏷️ PEDIR ETIQUETAS
 function enviarEtiqueta() {
   const empleado = document.getElementById('employeeName').textContent;
   const cantidad = parseInt(document.getElementById('cantidadEtiquetas').value);
@@ -111,7 +97,7 @@ function enviarEtiqueta() {
     return;
   }
 
-  alert("⏳ Enviando pedido al servidor... Esperando respuesta hasta 30 segundos...");
+  alert("⏳ Enviando pedido al servidor...");
 
   const timeout = new Promise((_, reject) => {
     setTimeout(() => reject(new Error("⏰ Tiempo agotado: no se recibieron etiquetas.")), 30000);
@@ -130,32 +116,21 @@ function enviarEtiqueta() {
 
   Promise.race([fetchRequest, timeout])
     .then(data => {
-      let etiquetas = [];
-
-      if (Array.isArray(data.etiquetas)) {
-        etiquetas = data.etiquetas;
-      } else if (typeof data.etiquetas === "string") {
-        if (data.etiquetas.toLowerCase().includes("no hay")) {
-          alert("⚠️ No hay etiquetas disponibles en el sistema.");
-          return;
-        } else {
-          etiquetas = [data.etiquetas];
-        }
-      }
-
       const etiquetasDiv = document.getElementById("etiquetasAsignadas");
       const listaUl = document.getElementById("listaEtiquetas");
-
       listaUl.innerHTML = "";
 
-      if (etiquetas.length === 0) {
+      if (!data.etiquetas || (Array.isArray(data.etiquetas) && data.etiquetas.length === 0)) {
         etiquetasDiv.style.display = "none";
-        alert("⚠️ No se recibieron etiquetas desde el servidor.");
+        alert("⚠️ No hay etiquetas disponibles en este momento.");
         return;
       }
 
-      etiquetasDiv.style.display = "block";
+      const etiquetas = Array.isArray(data.etiquetas)
+        ? data.etiquetas
+        : [data.etiquetas];
 
+      etiquetasDiv.style.display = "block";
       etiquetas.forEach(etq => {
         const li = document.createElement("li");
         li.textContent = etq;
@@ -163,12 +138,6 @@ function enviarEtiqueta() {
       });
 
       localStorage.setItem("etiquetasAsignadas", JSON.stringify(etiquetas));
-
-      const lista = etiquetas.join(", ");
-      const contenido = `🏷️ Pedido de Etiquetas\nEmpleado: ${empleado}\nCantidad: ${cantidad}\nEtiquetas asignadas:\n${lista}\nFecha: ${fechaHora}`;
-      descargarComoTxt(`etiquetas_${empleado}.txt`, contenido);
-
-      volver();
     })
     .catch(err => {
       console.error("❌ Error al conectar con n8n:", err);
@@ -176,149 +145,8 @@ function enviarEtiqueta() {
     });
 }
 
+// Si querés que también se eliminen los .txt del resto de funciones como registrarEtiquetas, avisame y te lo ajusto 😄
 
-
-// 🚩 MOSTRAR HISTORIAL DE ETIQUETAS DESDE BACKEND
-function mostrarMisEtiquetas() {
-  const empleado = document.getElementById('employeeName').textContent;
-  // Oculta dashboard y muestra panel historial
-  document.getElementById('dashboard').classList.add('hidden');
-  const panel = document.getElementById("panelMisEtiquetas");
-  panel.classList.remove('hidden');
-  panel.innerHTML = "<h3>Mis etiquetas</h3><p>Cargando historial...</p>";
-
-  fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      funcion: "historial_etiquetas",
-      usuario: empleado
-    })
-  })
-  .then(res => res.json())
-  .then(historico => {
-    if (!Array.isArray(historico) || historico.length === 0) {
-      panel.innerHTML = "<h3>Mis etiquetas</h3><p>No tenés pedidos anteriores.</p>";
-      return;
-    }
-
-    let html = "<h3>Mis etiquetas</h3>";
-    historico.forEach(pedido => {
-      html += `
-        <div class="pedido-historico">
-          <div class="pedido-fecha"><b>Fecha:</b> ${pedido.fecha}</div>
-          <div class="pedido-lista"><b>Etiquetas:</b> 
-            <span class="etiquetas-historico">
-              ${pedido.etiquetas.map(e => `<span class="chip-etiqueta">${e}</span>`).join('')}
-            </span>
-          </div>
-        </div>
-      `;
-    });
-    panel.innerHTML = html + `<button onclick="cerrarMisEtiquetas()">Volver</button>`;
-  })
-  .catch(err => {
-    panel.innerHTML = "<h3>Mis etiquetas</h3><p style='color:red'>Error al cargar historial.</p>";
-    console.error("❌ Error al cargar historial:", err);
-  });
-}
-
-function cerrarMisEtiquetas() {
-  document.getElementById('panelMisEtiquetas').classList.add('hidden');
-  document.getElementById('dashboard').classList.remove('hidden');
-}
-
-// 📸 ENVIAR FOTO DE ODÓMETRO (simulado base64)
-function enviarFotoOdometro() {
-  const empleado = document.getElementById('employeeName').textContent;
-  const fileInput = document.getElementById('fotoKm');
-  const fechaHora = new Date().toLocaleString();
-  const file = fileInput.files[0];
-
-  if (!file) return alert("📸 Tenés que seleccionar una imagen.");
-
-  const reader = new FileReader();
-  reader.onload = function () {
-    const base64 = reader.result;
-
-    const datos = {
-      funcion: "subir_foto_odometro",
-      usuario: empleado,
-      fecha: fechaHora,
-      imagen_base64: base64
-    };
-
-    fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(datos)
-    })
-    .then(() => {
-      alert("✅ Foto enviada correctamente.");
-    })
-    .catch(err => {
-      console.error("❌ Error al subir la foto:", err);
-      alert("❌ No se pudo subir la imagen.");
-    });
-  };
-  reader.readAsDataURL(file);
-}
-
-// ✅ REGISTRAR NUEVAS ETIQUETAS (ADMIN)
-function registrarEtiquetas() {
-  const desde = parseInt(document.getElementById("etiquetaInicio").value);
-  const hasta = parseInt(document.getElementById("etiquetaFin").value);
-  const empleado = document.getElementById('employeeName').textContent;
-  const fechaHora = new Date().toLocaleString();
-
-  if (isNaN(desde) || isNaN(hasta) || desde < 1 || hasta < desde) {
-    alert("Por favor ingresá un rango válido.");
-    return;
-  }
-
-  const etiquetas = [];
-  for (let i = desde; i <= hasta; i++) {
-    etiquetas.push(`ETQ-${String(i).padStart(3, '0')}`);
-  }
-
-  const datos = {
-    funcion: "registro_etiquetas_admin",
-    usuario: empleado,
-    fecha: fechaHora,
-    etiquetas: etiquetas
-  };
-
-  fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(datos)
-  })
-  .then(res => res.json())
-  .then(respuesta => {
-    // Manejá lo que devuelve el webhook (si devuelve algo relevante)
-    const lista = etiquetas.join(", ");
-    const contenido = `📦 NUEVAS ETIQUETAS REGISTRADAS\nRango: ETQ-${desde} a ETQ-${hasta}\nTotal: ${etiquetas.length}\nListado:\n${lista}\nFecha: ${fechaHora}`;
-    descargarComoTxt(`registro_etiquetas_ETQ-${desde}_a_ETQ-${hasta}.txt`, contenido);
-
-    alert(`✅ ¡Se registraron ${etiquetas.length} etiquetas!\nRespuesta del servidor: ${JSON.stringify(respuesta)}`);
-    volver();
-  })
-  .catch(err => {
-    console.error("❌ Error al registrar etiquetas:", err);
-    alert("❌ No se pudo registrar las etiquetas en el servidor.");
-  });
-}
-
-// 📄 DESCARGAR ARCHIVO TXT
-function descargarComoTxt(nombreArchivo, contenido) {
-  const blob = new Blob([contenido], { type: 'text/plain' });
-  const enlace = document.createElement('a');
-  enlace.href = URL.createObjectURL(blob);
-  enlace.download = nombreArchivo;
-  enlace.click();
-}
-
-// 🚀 INIT
 document.addEventListener("DOMContentLoaded", () => {
   const loginInputs = [document.getElementById("username"), document.getElementById("password")];
   loginInputs.forEach(input => {
