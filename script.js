@@ -4,19 +4,21 @@ const usuarios = {
   adm: "adm1"
 };
 
-// 🔐 FUNCIÓN DE LOGIN (sin cambios)
+// 🔐 LOGIN
 function login() {
   const username = document.getElementById('username').value.trim().toLowerCase();
-  const pass = document.getElementById('password').value.trim();
+  const pass     = document.getElementById('password').value.trim();
 
   if (!username || !pass) return mostrarMensaje("❗ Por favor completá ambos campos.", true);
   if (!(username in usuarios)) return mostrarMensaje("🚫 Usuario no registrado.", true);
   if (usuarios[username] !== pass) return mostrarMensaje("🔑 Contraseña incorrecta.", true);
 
+  // Mostrar panel principal
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
   document.getElementById('employeeName').textContent = username;
 
+  // Botones según perfil
   document.getElementById('kmFormBtn').classList.remove('hidden');
   document.getElementById('etiquetaFormBtn').classList.remove('hidden');
   document.getElementById('adminBtn').classList.toggle('hidden', username !== 'adm');
@@ -61,9 +63,9 @@ function ocultarTodosLosFormularios() {
 
 // ✅ ENVIAR REGISTRO DE KM
 async function enviarKM() {
-  const empleado = document.getElementById('employeeName').textContent;
-  const patente = document.getElementById('patente').value;
-  const kmFinal = document.getElementById('kmFinal').value;
+  const empleado  = document.getElementById('employeeName').textContent;
+  const patente   = document.getElementById('patente').value;
+  const kmFinal   = document.getElementById('kmFinal').value;
   const fotoInput = document.getElementById('fotoOdometro');
   const fechaHora = new Date().toLocaleString();
 
@@ -76,11 +78,11 @@ async function enviarKM() {
 
   try {
     const datos = {
-      funcion: "registro_km",
-      usuario: empleado,
-      patente: patente,
+      funcion : "registro_km",
+      usuario : empleado,
+      patente : patente,
       km_final: kmFinal,
-      fecha: fechaHora
+      fecha   : fechaHora
     };
 
     if (fotoInput.files[0]) {
@@ -93,10 +95,9 @@ async function enviarKM() {
       15000
     );
 
-    // Modificación aquí para manejar mejor la respuesta
     if (respuesta && (respuesta.Mensaje === "Registro guardado correctamente" || respuesta.ok)) {
       mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
-      // Limpiar formulario después de éxito
+      // Limpiar
       document.getElementById('patente').value = "";
       document.getElementById('kmFinal').value = "";
       document.getElementById('fotoOdometro').value = "";
@@ -111,10 +112,10 @@ async function enviarKM() {
   }
 }
 
-// 🏷️ PEDIR ETIQUETAS (sin cambios)
+// 🏷️ PEDIR ETIQUETAS
 function enviarEtiqueta() {
-  const empleado = document.getElementById('employeeName').textContent;
-  const cantidad = parseInt(document.getElementById('cantidadEtiquetas').value);
+  const empleado  = document.getElementById('employeeName').textContent;
+  const cantidad  = parseInt(document.getElementById('cantidadEtiquetas').value);
   const fechaHora = new Date().toLocaleString();
 
   if (isNaN(cantidad) || cantidad < 1) {
@@ -124,26 +125,26 @@ function enviarEtiqueta() {
 
   mostrarMensaje("⏳ Enviando pedido al servidor... Esperando respuesta...");
 
-  const timeout = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error("⏰ Tiempo agotado: no se recibieron etiquetas.")), 30000);
-  });
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("⏰ Tiempo agotado: no se recibieron etiquetas.")), 30000)
+  );
 
   const fetchRequest = fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-    method: "POST",
+    method : "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+    body   : JSON.stringify({
       funcion: "pedir_etiquetas",
       usuario: empleado,
       cantidad: cantidad,
-      fecha: fechaHora
+      fecha  : fechaHora
     })
   }).then(res => res.json());
 
   Promise.race([fetchRequest, timeout])
     .then(data => {
       const etiquetasDiv = document.getElementById("etiquetasAsignadas");
-      const listaUl = document.getElementById("listaEtiquetas");
-      listaUl.innerHTML = "";
+      const listaUl      = document.getElementById("listaEtiquetas");
+      listaUl.innerHTML  = "";
 
       if (!data.etiquetas || (Array.isArray(data.etiquetas) && data.etiquetas.length === 0)) {
         etiquetasDiv.style.display = "none";
@@ -151,9 +152,7 @@ function enviarEtiqueta() {
         return;
       }
 
-      const etiquetas = Array.isArray(data.etiquetas)
-        ? data.etiquetas
-        : [data.etiquetas];
+      const etiquetas = Array.isArray(data.etiquetas) ? data.etiquetas : [data.etiquetas];
 
       etiquetasDiv.style.display = "block";
       etiquetas.forEach(etq => {
@@ -175,11 +174,11 @@ function enviarEtiqueta() {
     });
 }
 
-// ✅ REGISTRAR NUEVAS ETIQUETAS (ADMIN) (sin cambios)
+// ✅ REGISTRAR NUEVAS ETIQUETAS (ADMIN)
 function registrarEtiquetas() {
-  const desde = parseInt(document.getElementById("etiquetaInicio").value);
-  const hasta = parseInt(document.getElementById("etiquetaFin").value);
-  const empleado = document.getElementById('employeeName').textContent;
+  const desde     = parseInt(document.getElementById("etiquetaInicio").value);
+  const hasta     = parseInt(document.getElementById("etiquetaFin").value);
+  const empleado  = document.getElementById('employeeName').textContent;
   const fechaHora = new Date().toLocaleString();
 
   if (isNaN(desde) || isNaN(hasta) || desde < 1 || hasta < desde) {
@@ -193,23 +192,22 @@ function registrarEtiquetas() {
   }
 
   const datos = {
-    funcion: "registro_etiquetas_admin",
-    usuario: empleado,
-    fecha: fechaHora,
-    etiquetas: etiquetas
+    funcion : "registro_etiquetas_admin",
+    usuario : empleado,
+    fecha   : fechaHora,
+    etiquetas
   };
 
   mostrarMensaje("⏳ Registrando nuevas etiquetas...");
 
   fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-    method: "POST",
+    method : "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(datos)
+    body   : JSON.stringify(datos)
   })
   .then(res => res.json())
-  .then(respuesta => {
-    const lista = etiquetas.join("<br>");
-    mostrarMensaje(`✅ Se registraron <b>${etiquetas.length}</b> etiquetas:<br><br>${lista}<br><br><b>Fecha:</b> ${fechaHora}`);
+  .then(() => {
+    mostrarMensaje(`✅ Se registraron <b>${etiquetas.length}</b> etiquetas:<br><br>${etiquetas.join("<br>")}<br><br><b>Fecha:</b> ${fechaHora}`);
   })
   .catch(err => {
     console.error("❌ Error al registrar etiquetas:", err);
@@ -217,25 +215,23 @@ function registrarEtiquetas() {
   });
 }
 
-// 🎯 FUNCIÓN MOSTRAR MENSAJE (actualizada)
+// 🎯 PANEL DE MENSAJES
 function mostrarMensaje(mensaje, esError = false, esLoader = false) {
-  const panel = document.getElementById("panelMensajes");
+  const panel     = document.getElementById("panelMensajes");
   const contenido = document.getElementById("contenidoMensaje");
 
-  contenido.innerHTML = esLoader 
-    ? `<div class="loader"></div><br>${mensaje}`
-    : mensaje;
-  contenido.style.color = esError ? "red" : "black";
+  contenido.innerHTML     = esLoader ? `<div class="loader"></div><br>${mensaje}` : mensaje;
+  contenido.style.color   = esError ? "red" : "black";
 
   ocultarTodosLosFormularios();
   panel.classList.remove("hidden");
 }
 
-// 🔄 FUNCIONES AUXILIARES
+// 🔄 AUXILIARES
 function convertirImagenABase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onload  = () => resolve(reader.result.split(',')[1]);
     reader.onerror = () => reject(new Error("Error al procesar la foto"));
     reader.readAsDataURL(file);
   });
@@ -243,83 +239,62 @@ function convertirImagenABase64(file) {
 
 async function enviarConTimeout(url, datos, timeoutMs) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutId  = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
-      method: "POST",
+      method : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(datos),
-      signal: controller.signal
+      body   : JSON.stringify(datos),
+      signal : controller.signal
     });
 
     clearTimeout(timeoutId);
     return await response.json();
   } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new Error("El servidor no respondió a tiempo");
-    }
+    if (error.name === 'AbortError') throw new Error("El servidor no respondió a tiempo");
     throw error;
   }
 }
-// Función para mostrar el panel de historial de etiquetas
+
+// 👀 HISTORIAL DE ETIQUETAS
 function showHistorialEtiquetas() {
   document.getElementById('dashboard').classList.add('hidden');
   document.getElementById('panelMisEtiquetas').classList.remove('hidden');
   obtenerHistorialEtiquetas();
 }
 
-// Función para obtener el historial de etiquetas del usuario
-async function obtenerHistorialEtiquetas() {
+function obtenerHistorialEtiquetas() {
   const empleado = document.getElementById('employeeName').textContent;
-  
   mostrarMensaje("⏳ Obteniendo tu historial de etiquetas...", false, true);
 
-  try {
-    const datos = {
-      funcion: "historial_etiquetas",
-      usuario: empleado
-    };
-
-    const respuesta = await enviarConTimeout(
-      "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
-      datos,
-      10000
-    );
-
+  enviarConTimeout(
+    "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+    { funcion: "historial_etiquetas", usuario: empleado },
+    10000
+  )
+  .then(respuesta => {
     if (respuesta && respuesta.Mensaje) {
-      // Mostrar el historial en el panel
-      const historialDiv = document.getElementById('contenidoHistorial');
-      historialDiv.innerHTML = `<pre>${respuesta.Mensaje}</pre>`;
-    } else {
-      throw new Error("No se pudo obtener el historial");
-    }
-  } catch (error) {
-    console.error("Error al obtener historial:", error);
-    mostrarMensaje(`❌ Error al obtener historial: ${error.message}`, true);
-  }
+      document.getElementById('contenidoHistorial').innerHTML = `<pre>${respuesta.Mensaje}</pre>`;
+      document.getElementById('panelMensajes').classList.add('hidden');
+    } else throw new Error("No se pudo obtener el historial");
+  })
+  .catch(error => mostrarMensaje(`❌ Error al obtener historial: ${error.message}`, true));
 }
 
-// Agregar el botón en el dashboard (modificar la función login)
-function login() {
-  // ... código existente ...
-  
-  document.getElementById('kmFormBtn').classList.remove('hidden');
-  document.getElementById('etiquetaFormBtn').classList.remove('hidden');
-  document.getElementById('adminBtn').classList.toggle('hidden', username !== 'adm');
-  document.getElementById('historialBtn').classList.remove('hidden'); // Nuevo botón
+// Alias para que coincida con el botón del HTML
+function mostrarMisEtiquetas() {
+  showHistorialEtiquetas();
 }
-
 
 // 🚀 INICIALIZACIÓN
 document.addEventListener("DOMContentLoaded", () => {
-  // Evento para login con Enter
-  [document.getElementById("username"), document.getElementById("password")].forEach(input => {
-    input.addEventListener("keypress", (e) => e.key === "Enter" && login());
-  });
+  // Login con Enter
+  [document.getElementById("username"), document.getElementById("password")]
+    .forEach(i => i.addEventListener("keypress", e => e.key === "Enter" && login()));
 
-  // Preview de foto
-  document.getElementById('fotoOdometro').addEventListener('change', function(e) {
+  // Preview foto odómetro
+  document.getElementById('fotoOdometro').addEventListener('change', e => {
     const preview = document.getElementById('fotoPreview');
     if (e.target.files[0]) {
       preview.src = URL.createObjectURL(e.target.files[0]);
