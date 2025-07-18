@@ -180,3 +180,27 @@ label {
   margin-top: 10px;
   display: none;
 }
+#panelMisEtiquetas {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+#contenidoHistorial {
+  background-color: white;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 15px 0;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+}
+
+#contenidoHistorial pre {
+  white-space: pre-wrap;
+  font-family: inherit;
+  margin: 0;
+}
