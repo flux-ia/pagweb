@@ -93,10 +93,17 @@ async function enviarKM() {
       15000
     );
 
-    if (respuesta.ok) {
+    // Modificación aquí para manejar mejor la respuesta
+    if (respuesta && (respuesta.Mensaje === "Registro guardado correctamente" || respuesta.ok)) {
       mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
+      // Limpiar formulario después de éxito
+      document.getElementById('patente').value = "";
+      document.getElementById('kmFinal').value = "";
+      document.getElementById('fotoOdometro').value = "";
+      document.getElementById('fotoPreview').style.display = 'none';
     } else {
-      throw new Error(respuesta.error || "Error en el servidor");
+      const errorMsg = respuesta?.error || respuesta?.Mensaje || "Error desconocido en el servidor";
+      throw new Error(errorMsg);
     }
   } catch (error) {
     console.error("Error en enviarKM:", error);
@@ -255,6 +262,54 @@ async function enviarConTimeout(url, datos, timeoutMs) {
     throw error;
   }
 }
+// Función para mostrar el panel de historial de etiquetas
+function showHistorialEtiquetas() {
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('panelMisEtiquetas').classList.remove('hidden');
+  obtenerHistorialEtiquetas();
+}
+
+// Función para obtener el historial de etiquetas del usuario
+async function obtenerHistorialEtiquetas() {
+  const empleado = document.getElementById('employeeName').textContent;
+  
+  mostrarMensaje("⏳ Obteniendo tu historial de etiquetas...", false, true);
+
+  try {
+    const datos = {
+      funcion: "historial_etiquetas",
+      usuario: empleado
+    };
+
+    const respuesta = await enviarConTimeout(
+      "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+      datos,
+      10000
+    );
+
+    if (respuesta && respuesta.Mensaje) {
+      // Mostrar el historial en el panel
+      const historialDiv = document.getElementById('contenidoHistorial');
+      historialDiv.innerHTML = `<pre>${respuesta.Mensaje}</pre>`;
+    } else {
+      throw new Error("No se pudo obtener el historial");
+    }
+  } catch (error) {
+    console.error("Error al obtener historial:", error);
+    mostrarMensaje(`❌ Error al obtener historial: ${error.message}`, true);
+  }
+}
+
+// Agregar el botón en el dashboard (modificar la función login)
+function login() {
+  // ... código existente ...
+  
+  document.getElementById('kmFormBtn').classList.remove('hidden');
+  document.getElementById('etiquetaFormBtn').classList.remove('hidden');
+  document.getElementById('adminBtn').classList.toggle('hidden', username !== 'adm');
+  document.getElementById('historialBtn').classList.remove('hidden'); // Nuevo botón
+}
+
 
 // 🚀 INICIALIZACIÓN
 document.addEventListener("DOMContentLoaded", () => {
