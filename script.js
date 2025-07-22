@@ -268,7 +268,7 @@ function obtenerHistorialEtiquetas() {
     10000
   )
   .then(respuesta => {
-    if (respuesta && Array.isArray(respuesta) {
+    if (respuesta && Array.isArray(respuesta)) {
       // Procesar la respuesta de N8N
       const historialHTML = procesarRespuestaHistorial(respuesta);
       
