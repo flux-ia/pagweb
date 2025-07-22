@@ -20,6 +20,41 @@ button {
   max-width: 400px;
   box-sizing: border-box;
 }
+/* Estilos para el historial */
+.historial-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.bloque-historico {
+  background: #f5f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #d0e3e8;
+}
+
+.fecha-historico {
+  font-weight: bold;
+  color: #007ea7;
+  margin-bottom: 8px;
+  font-size: 0.95em;
+}
+
+.tickets-historico {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ticket {
+  background: #c7eaf6;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.9em;
+  color: #005f7a;
+}
 
 button {
   background-color: #007ea7;
