@@ -258,12 +258,6 @@ async function enviarConTimeout(url, datos, timeoutMs) {
 }
 
 // 👀 HISTORIAL DE ETIQUETAS
-function showHistorialEtiquetas() {
-  document.getElementById('dashboard').classList.add('hidden');
-  document.getElementById('panelMisEtiquetas').classList.remove('hidden');
-  obtenerHistorialEtiquetas();
-}
-
 function obtenerHistorialEtiquetas() {
   const empleado = document.getElementById('employeeName').textContent;
   mostrarMensaje("⏳ Obteniendo tu historial de etiquetas...", false, true);
@@ -274,17 +268,60 @@ function obtenerHistorialEtiquetas() {
     10000
   )
   .then(respuesta => {
-    if (respuesta && respuesta.Mensaje) {
-      document.getElementById('contenidoHistorial').innerHTML = `<pre>${respuesta.Mensaje}</pre>`;
+    if (respuesta && Array.isArray(respuesta) {
+      // Procesar la respuesta de N8N
+      const historialHTML = procesarRespuestaHistorial(respuesta);
+      
+      // Mostrar en el panel
+      document.getElementById('contenidoHistorial').innerHTML = historialHTML;
       document.getElementById('panelMensajes').classList.add('hidden');
-    } else throw new Error("No se pudo obtener el historial");
+      document.getElementById('panelMisEtiquetas').classList.remove('hidden');
+    } else {
+      throw new Error("Formato de respuesta no reconocido");
+    }
   })
   .catch(error => mostrarMensaje(`❌ Error al obtener historial: ${error.message}`, true));
 }
 
-// Alias para que coincida con el botón del HTML
-function mostrarMisEtiquetas() {
-  showHistorialEtiquetas();
+// Función para procesar el formato específico de N8N
+function procesarRespuestaHistorial(respuestaN8N) {
+  try {
+    // Tomamos el primer elemento del array (según tu ejemplo)
+    const mensaje = respuestaN8N[0]?.Mensaje || '';
+    
+    // Dividimos por fechas
+    const bloques = mensaje.split('\n\n').filter(b => b.trim() !== '');
+    
+    let html = '<div class="historial-container">';
+    
+    bloques.forEach(bloque => {
+      const [fechaLine, ticketsLine] = bloque.split('\n').filter(l => l.trim() !== '');
+      
+      if (!fechaLine || !ticketsLine) return;
+      
+      // Extraer fecha
+      const fecha = fechaLine.replace('Fecha: ', '').trim();
+      // Extraer tickets
+      const tickets = ticketsLine.replace('Tickets: ', '').split(', ');
+      
+      html += `
+        <div class="bloque-historico">
+          <div class="fecha-historico">📅 ${fecha}</div>
+          <div class="tickets-historico">
+            ${tickets.map(t => `<span class="ticket">${t}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    return html;
+    
+  } catch (error) {
+    console.error("Error procesando historial:", error);
+    return `<p>No se pudo formatear el historial. Mostrando datos crudos:</p>
+            <pre>${JSON.stringify(respuestaN8N, null, 2)}</pre>`;
+  }
 }
 
 // 🚀 INICIALIZACIÓN
