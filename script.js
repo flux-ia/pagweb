@@ -2,6 +2,37 @@
 const usuarios = {
   gaston: "gaston1",
   adm: "adm1"
+ // Nuevos usuarios administrativos
+  davidbehm: "david123",
+  jaimeboc: "jaime123",
+  andrea: "andrea123",
+  juanchiner: "juan123",
+  eugenia: "eugenia123",
+  luciana: "luciana123",
+  juanfernandez: "juan456",
+  davidlaubert: "david456",
+  rafael: "rafael123",
+  enzo: "enzo123",
+  aldotejeda: "aldo123",
+  oscar: "oscar123",
+  pablo: "pablo123",
+  
+  // Usuarios técnicos
+  ian: "ian123",
+  omar: "omar123",
+  victor: "victor123",
+  santiago: "santi123",
+  gustavo: "gustavo123",
+  mauricio: "mauri123",
+  carlosb: "carlos123",
+  maximiliano: "maxi123",
+  cristianc: "cristian123",
+  cristianp: "crispa123",
+  carlosca: "carlos456",
+  jonathan: "jonathan123",
+  lautaro: "lautaro123",
+  nelson: "nelson123",
+  luis: "luis123"
 };
 
 // 🔐 LOGIN
