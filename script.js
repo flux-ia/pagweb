@@ -325,74 +325,54 @@ async function enviarConTimeout(url, datos, timeoutMs) {
 
 // 👀 HISTORIAL DE ETIQUETAS (VERSIÓN CORREGIDA)
 function obtenerHistorialEtiquetas() {
-  const empleado = document.getElementById('employeeName').textContent;
-  mostrarMensaje("⏳ Obteniendo tu historial de etiquetas...", false, true);
-
-  enviarConTimeout(
-    "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
-    { funcion: "historial_etiquetas", usuario: empleado },
-    10000
-  )
-  .then(respuesta => {
-    if (respuesta && Array.isArray(respuesta) && respuesta[0]?.Mensaje) {
-      // Procesar el formato específico de n8n
-      const historialHTML = formatearHistorial(respuesta[0].Mensaje);
-      
-      document.getElementById('contenidoHistorial').innerHTML = historialHTML;
-      document.getElementById('panelMensajes').classList.add('hidden');
-      document.getElementById('panelMisEtiquetas').classList.remove('hidden');
-    } else {
-      throw new Error("Formato de respuesta no reconocido");
-    }
-  })
-  .catch(error => mostrarMensaje(`❌ Error: ${error.message}`, true));
-}
-
-// Función auxiliar para formatear el mensaje de n8n
-function formatearHistorial(mensajeN8N) {
-  try {
-    // Limpiar el mensaje de caracteres especiales
-    mensajeN8N = mensajeN8N.replace(/\\n/g, '\n').replace(/\\u/g, '');
-    
-    // Dividir por bloques de fecha
-    const bloques = mensajeN8N.split('\n\n').filter(bloque => {
-      return bloque.trim() !== '' && bloque.includes('Fecha:');
-    });
-    
-    let html = '<div class="historial-container" style="max-height: 400px; overflow-y: auto;">';
-    
-    bloques.forEach(bloque => {
-      const lineas = bloque.split('\n').filter(linea => linea.trim() !== '');
-      if (lineas.length < 2) return;
-
-      // Extraer fecha (manejar diferentes formatos)
-      const fechaLinea = lineas.find(l => l.includes('Fecha:')) || lineas[0];
-      const fecha = fechaLinea.replace('Fecha:', '').replace('Fetcha:', '').trim();
-      
-      // Extraer tickets (manejar diferentes formatos)
-      const ticketsLinea = lineas.find(l => l.includes('Tickets:')) || lineas[1];
-      const tickets = ticketsLinea.replace('Tickets:', '').split(',').map(t => t.trim()).filter(t => t);
-      
-      if (tickets.length === 0) return;
-
-      html += `
-        <div class="bloque-historico" style="margin-bottom: 20px; padding: 10px; border-bottom: 1px solid #eee;">
-          <div class="fecha-historico" style="font-weight: bold; color: #2c3e50;">📅 ${fecha}</div>
-          <div class="tickets-historico" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
-            ${tickets.map(t => `<span class="ticket" style="background: #e3f2fd; padding: 3px 8px; border-radius: 3px;">${t}</span>`).join('')}
-          </div>
-        </div>
-      `;
-    });
-    
-    return bloques.length > 0 ? html + '</div>' : '<p>No se encontraron etiquetas en tu historial.</p>';
-  } catch (error) {
-    console.error("Error al formatear historial:", error);
-    return `
-      <p>Error al procesar el historial. Datos crudos:</p>
-      <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px;">${JSON.stringify(mensajeN8N, null, 2)}</pre>
-    `;
+  const username = localStorage.getItem("username");
+  if (!username) {
+    mostrarMensaje("Error: Usuario no identificado");
+    return;
   }
+
+  mostrarMensaje("Consultando historial de etiquetas...");
+  
+  fetch("https://n8n-tu-webhook-url.com", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ usuario: username })
+  })
+  .then(response => response.json())
+  .then(respuesta => {
+    // Mostrar en consola para debugging
+    console.log("RESPUESTA:", respuesta);
+
+    let contenidoHistorial = "";
+
+    if (Array.isArray(respuesta) && respuesta[0]?.Mensaje) {
+      contenidoHistorial = formatearHistorial(respuesta[0].Mensaje);
+    } else {
+      contenidoHistorial = "No se encontró historial o el formato de respuesta es incorrecto.";
+    }
+
+    // Mostrar el historial en el panel
+    const panelHistorial = document.getElementById("panelMisEtiquetas");
+    const contenidoHistorialDiv = document.getElementById("contenidoHistorial");
+
+    contenidoHistorialDiv.innerHTML = contenidoHistorial;
+    panelHistorial.classList.remove("hidden");
+  })
+  .catch(error => {
+    console.error("Error obteniendo historial:", error);
+    mostrarMensaje("Error al consultar el historial.");
+  });
+}
+function formatearHistorial(mensajeN8N) {
+  const bloques = mensajeN8N
+    .split('\n\n')
+    .filter(b => b.trim() !== '');
+    
+  return bloques
+    .map(b => `<p>${b.replace(/\n/g, '<br>')}</p>`)
+    .join('');
 }
 
 // 🚀 INICIALIZACIÓN
