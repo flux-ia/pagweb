@@ -335,8 +335,7 @@ function obtenerHistorialEtiquetas() {
 
   mostrarMensaje("Consultando historial de etiquetas...");
   
-  fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20"
-, {
+  fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
