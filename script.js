@@ -346,7 +346,7 @@ function obtenerHistorialEtiquetas() {
 })
   })
   .then(response => response.json())
-  .then(respuesta => {
+.then(respuesta => {
   console.log("RESPUESTA:", respuesta);
 
   let mensaje = null;
@@ -365,8 +365,10 @@ function obtenerHistorialEtiquetas() {
   const contenidoHistorialDiv = document.getElementById("contenidoHistorial");
 
   contenidoHistorialDiv.innerHTML = contenidoHistorial;
+  document.getElementById("panelMensajes").classList.add("hidden"); // 👈 Este es el que oculta el recuadro de arriba
   panelHistorial.classList.remove("hidden");
 })
+
 
   .catch(error => {
     console.error("Error obteniendo historial:", error);
