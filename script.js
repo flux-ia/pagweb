@@ -347,31 +347,27 @@ function obtenerHistorialEtiquetas() {
   })
   .then(response => response.json())
   .then(respuesta => {
-    // Mostrar en consola para debugging
-    console.log("RESPUESTA:", respuesta);
+  console.log("RESPUESTA:", respuesta);
 
-    let contenidoHistorial = "";
+  let mensaje = null;
 
-    let mensaje = null;
+  if (Array.isArray(respuesta)) {
+    mensaje = respuesta[0]?.Mensaje;
+  } else if (respuesta?.Mensaje) {
+    mensaje = respuesta.Mensaje;
+  }
 
-if (Array.isArray(respuesta)) {
-  mensaje = respuesta[0]?.Mensaje;
-} else if (respuesta?.Mensaje) {
-  mensaje = respuesta.Mensaje;
-}
+  const contenidoHistorial = mensaje
+    ? formatearHistorial(mensaje)
+    : "<p>No se encontró historial o el formato de respuesta es incorrecto.</p>";
 
-const contenidoHistorial = mensaje
-  ? formatearHistorial(mensaje)
-  : "No se encontró historial o el formato de respuesta es incorrecto.";
+  const panelHistorial = document.getElementById("panelMisEtiquetas");
+  const contenidoHistorialDiv = document.getElementById("contenidoHistorial");
 
+  contenidoHistorialDiv.innerHTML = contenidoHistorial;
+  panelHistorial.classList.remove("hidden");
+})
 
-    // Mostrar el historial en el panel
-    const panelHistorial = document.getElementById("panelMisEtiquetas");
-    const contenidoHistorialDiv = document.getElementById("contenidoHistorial");
-
-    contenidoHistorialDiv.innerHTML = contenidoHistorial;
-    panelHistorial.classList.remove("hidden");
-  })
   .catch(error => {
     console.error("Error obteniendo historial:", error);
     mostrarMensaje("Error al consultar el historial.");
