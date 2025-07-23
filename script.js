@@ -88,6 +88,7 @@ function login() {
   document.getElementById('kmFormBtn').classList.remove('hidden');
   document.getElementById('etiquetaFormBtn').classList.remove('hidden');
   document.getElementById('adminBtn').classList.toggle('hidden', username !== 'adm');
+   localStorage.setItem("username", username);
 }
 
 // 🔁 MOSTRAR FORMULARIOS
