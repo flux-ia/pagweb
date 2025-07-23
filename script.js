@@ -323,7 +323,7 @@ async function enviarConTimeout(url, datos, timeoutMs) {
   }
 }
 
-// 👀 HISTORIAL DE ETIQUETAS
+// 👀 HISTORIAL DE ETIQUETAS (VERSIÓN CORREGIDA)
 function obtenerHistorialEtiquetas() {
   const empleado = document.getElementById('employeeName').textContent;
   mostrarMensaje("⏳ Obteniendo tu historial de etiquetas...", false, true);
@@ -334,11 +334,10 @@ function obtenerHistorialEtiquetas() {
     10000
   )
   .then(respuesta => {
-    if (respuesta && Array.isArray(respuesta)) {
-      // Procesar la respuesta de N8N
-      const historialHTML = procesarRespuestaHistorial(respuesta);
+    if (respuesta && Array.isArray(respuesta) && respuesta[0]?.Mensaje) {
+      // Procesar el formato específico de n8n
+      const historialHTML = formatearHistorial(respuesta[0].Mensaje);
       
-      // Mostrar en el panel
       document.getElementById('contenidoHistorial').innerHTML = historialHTML;
       document.getElementById('panelMensajes').classList.add('hidden');
       document.getElementById('panelMisEtiquetas').classList.remove('hidden');
@@ -346,47 +345,53 @@ function obtenerHistorialEtiquetas() {
       throw new Error("Formato de respuesta no reconocido");
     }
   })
-  .catch(error => mostrarMensaje(`❌ Error al obtener historial: ${error.message}`, true));
+  .catch(error => mostrarMensaje(`❌ Error: ${error.message}`, true));
 }
 
-// Función para procesar el formato específico de N8N
-function procesarRespuestaHistorial(respuestaN8N) {
+// Función auxiliar para formatear el mensaje de n8n
+function formatearHistorial(mensajeN8N) {
   try {
-    // Tomamos el primer elemento del array (según tu ejemplo)
-    const mensaje = respuestaN8N[0]?.Mensaje || '';
+    // Limpiar el mensaje de caracteres especiales
+    mensajeN8N = mensajeN8N.replace(/\\n/g, '\n').replace(/\\u/g, '');
     
-    // Dividimos por fechas
-    const bloques = mensaje.split('\n\n').filter(b => b.trim() !== '');
+    // Dividir por bloques de fecha
+    const bloques = mensajeN8N.split('\n\n').filter(bloque => {
+      return bloque.trim() !== '' && bloque.includes('Fecha:');
+    });
     
-    let html = '<div class="historial-container">';
+    let html = '<div class="historial-container" style="max-height: 400px; overflow-y: auto;">';
     
     bloques.forEach(bloque => {
-      const [fechaLine, ticketsLine] = bloque.split('\n').filter(l => l.trim() !== '');
+      const lineas = bloque.split('\n').filter(linea => linea.trim() !== '');
+      if (lineas.length < 2) return;
+
+      // Extraer fecha (manejar diferentes formatos)
+      const fechaLinea = lineas.find(l => l.includes('Fecha:') || lineas[0];
+      const fecha = fechaLinea.replace('Fecha:', '').replace('Fetcha:', '').trim();
       
-      if (!fechaLine || !ticketsLine) return;
+      // Extraer tickets (manejar diferentes formatos)
+      const ticketsLinea = lineas.find(l => l.includes('Tickets:')) || lineas[1];
+      const tickets = ticketsLinea.replace('Tickets:', '').split(',').map(t => t.trim()).filter(t => t);
       
-      // Extraer fecha
-      const fecha = fechaLine.replace('Fecha: ', '').trim();
-      // Extraer tickets
-      const tickets = ticketsLine.replace('Tickets: ', '').split(', ');
-      
+      if (tickets.length === 0) return;
+
       html += `
-        <div class="bloque-historico">
-          <div class="fecha-historico">📅 ${fecha}</div>
-          <div class="tickets-historico">
-            ${tickets.map(t => `<span class="ticket">${t}</span>`).join('')}
+        <div class="bloque-historico" style="margin-bottom: 20px; padding: 10px; border-bottom: 1px solid #eee;">
+          <div class="fecha-historico" style="font-weight: bold; color: #2c3e50;">📅 ${fecha}</div>
+          <div class="tickets-historico" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+            ${tickets.map(t => `<span class="ticket" style="background: #e3f2fd; padding: 3px 8px; border-radius: 3px;">${t}</span>`).join('')}
           </div>
         </div>
       `;
     });
     
-    html += '</div>';
-    return html;
-    
+    return bloques.length > 0 ? html + '</div>' : '<p>No se encontraron etiquetas en tu historial.</p>';
   } catch (error) {
-    console.error("Error procesando historial:", error);
-    return `<p>No se pudo formatear el historial. Mostrando datos crudos:</p>
-            <pre>${JSON.stringify(respuestaN8N, null, 2)}</pre>`;
+    console.error("Error al formatear historial:", error);
+    return `
+      <p>Error al procesar el historial. Datos crudos:</p>
+      <pre style="background: #f5f5f5; padding: 10px; border-radius: 5px;">${JSON.stringify(mensajeN8N, null, 2)}</pre>
+    `;
   }
 }
 
