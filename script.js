@@ -1,7 +1,7 @@
 // 🧠 BASE DE DATOS LOCAL DE USUARIOS
 const usuarios = {
   gaston: "gaston1",
-  adm: "adm1"
+  adm: "adm1",
   // Nuevos usuarios administrativos
   behm: "behm123",
   bocchetto: "boc123",
