@@ -340,7 +340,10 @@ function obtenerHistorialEtiquetas() {
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ usuario: username })
+    body: JSON.stringify({ 
+  funcion: "historial_etiquetas", 
+  usuario: username 
+})
   })
   .then(response => response.json())
   .then(respuesta => {
