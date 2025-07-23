@@ -352,11 +352,18 @@ function obtenerHistorialEtiquetas() {
 
     let contenidoHistorial = "";
 
-    if (Array.isArray(respuesta) && respuesta[0]?.Mensaje) {
-      contenidoHistorial = formatearHistorial(respuesta[0].Mensaje);
-    } else {
-      contenidoHistorial = "No se encontró historial o el formato de respuesta es incorrecto.";
-    }
+    let mensaje = null;
+
+if (Array.isArray(respuesta)) {
+  mensaje = respuesta[0]?.Mensaje;
+} else if (respuesta?.Mensaje) {
+  mensaje = respuesta.Mensaje;
+}
+
+const contenidoHistorial = mensaje
+  ? formatearHistorial(mensaje)
+  : "No se encontró historial o el formato de respuesta es incorrecto.";
+
 
     // Mostrar el historial en el panel
     const panelHistorial = document.getElementById("panelMisEtiquetas");
