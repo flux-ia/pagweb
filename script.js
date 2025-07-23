@@ -366,7 +366,7 @@ function formatearHistorial(mensajeN8N) {
       if (lineas.length < 2) return;
 
       // Extraer fecha (manejar diferentes formatos)
-      const fechaLinea = lineas.find(l => l.includes('Fecha:') || lineas[0];
+      const fechaLinea = lineas.find(l => l.includes('Fecha:')) || lineas[0];
       const fecha = fechaLinea.replace('Fecha:', '').replace('Fetcha:', '').trim();
       
       // Extraer tickets (manejar diferentes formatos)
