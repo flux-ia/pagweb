@@ -326,7 +326,8 @@ async function enviarConTimeout(url, datos, timeoutMs) {
 
 // 👀 HISTORIAL DE ETIQUETAS (VERSIÓN CORREGIDA)
 function obtenerHistorialEtiquetas() {
-  const username = localStorage.getItem("username");
+  const username = document.getElementById("employeeName").textContent;
+
   if (!username) {
     mostrarMensaje("Error: Usuario no identificado");
     return;
