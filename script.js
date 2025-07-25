@@ -248,7 +248,7 @@ function registrarEtiquetas() {
   const empleado  = document.getElementById('employeeName').textContent;
   const fechaHora = new Date().toLocaleString();
 
-  if (isNaN(desde) || isNaN(hasta) || desde < 1 || hasta < desde) {
+  if (isNaN(desde) || isNaN(hasta) || desde < 0 || hasta < desde) {
     mostrarMensaje("❌ Por favor ingresá un rango válido.", true);
     return;
   }
@@ -273,9 +273,27 @@ function registrarEtiquetas() {
     body   : JSON.stringify(datos)
   })
   .then(res => res.json())
-  .then(() => {
-    mostrarMensaje(`✅ Se registraron <b>${etiquetas.length}</b> etiquetas:<br><br>${etiquetas.join("<br>")}<br><br><b>Fecha:</b> ${fechaHora}`);
-  })
+  .then(respuesta => {
+  if (!respuesta || typeof respuesta.Mensaje !== "string") {
+    mostrarMensaje("❌ Respuesta inválida del servidor.", true);
+    return;
+  }
+
+  console.log("RESPUESTA REGISTRO:", respuesta);
+
+  const mensaje = respuesta.Mensaje;
+
+  if (mensaje.toLowerCase().includes("ya existen")) {
+    mostrarMensaje(`❌ Error: ${mensaje}`, true);
+  } else {
+    mostrarMensaje(
+      `✅ ${mensaje}<br><br>` +
+      `<b>Etiquetas:</b><br>${etiquetas.join("<br>")}<br><br>` +
+      `<b>Fecha:</b> ${fechaHora}`
+    );
+  }
+})
+
   .catch(err => {
     console.error("❌ Error al registrar etiquetas:", err);
     mostrarMensaje("❌ No se pudo registrar las etiquetas en el servidor.", true);
