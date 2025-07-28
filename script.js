@@ -143,46 +143,49 @@ async function enviarKM() {
 
   mostrarMensaje("⏳ Enviando registro...", false, true);
 
-  try {
-    const datos = {
-      funcion : "registro_km",
-      usuario : empleado,
-      patente : patente,
-      km_final: kmFinal,
-      fecha   : fechaHora
-    };
+  const datos = {
+    funcion : "registro_km",
+    usuario : empleado,
+    patente : patente,
+    km_final: kmFinal,
+    fecha   : fechaHora
+  };
 
-    if (fotoInput.files[0]) {
-      datos.foto = await convertirImagenABase64(fotoInput.files[0]);
+  if (fotoInput.files[0]) {
+    datos.foto = await convertirImagenABase64(fotoInput.files[0]);
+  }
+
+  fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
+    method : "POST",
+    headers: { "Content-Type": "application/json" },
+    body   : JSON.stringify(datos)
+  })
+  .then(res => res.json())
+  .then(respuesta => {
+    console.log("RESPUESTA KM:", respuesta);
+
+    if (!respuesta || typeof respuesta.Mensaje !== "string") {
+      mostrarMensaje("❌ Respuesta inválida del servidor.", true);
+      return;
     }
 
-    const respuestaRaw = await enviarConTimeout(
-      "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
-      datos,
-      15000
-    );
+    const mensaje = respuesta.Mensaje;
 
-    console.log("RESPUESTA KM RAW:", respuestaRaw);
-
-    // 🧠 Asegurarse que sea un objeto
-    let respuesta;
-    if (typeof respuestaRaw === "string") {
-      try {
-        respuesta = JSON.parse(respuestaRaw);
-      } catch (e) {
-        throw new Error("La respuesta del servidor no es un JSON válido.");
-      }
+    if (mensaje === "Registro guardado correctamente") {
+      mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
+      document.getElementById('patente').value = "";
+      document.getElementById('kmFinal').value = "";
+      document.getElementById('fotoOdometro').value = "";
+      document.getElementById('fotoPreview').style.display = 'none';
     } else {
-      respuesta = respuestaRaw;
+      mostrarMensaje(`❌ Error: ${mensaje}`, true);
     }
-
-    // 🔍 Interpretar respuesta con flexibilidad
-    let mensajeFinal = "";
-    if (Array.isArray(respuesta)) {
-      mensajeFinal = respuesta[0]?.mensaje || respuesta[0]?.Mensaje || respuesta[0]?.error;
-    } else {
-      mensajeFinal = respuesta?.mensaje || respuesta?.Mensaje || respuesta?.error;
-    }
+  })
+  .catch(error => {
+    console.error("❌ Error en enviarKM:", error);
+    mostrarMensaje("❌ No se pudo registrar los KM en el servidor.", true);
+  });
+}
 
     // 🚦 Evaluar éxito
     if (mensajeFinal === "Registro guardado correctamente") {
