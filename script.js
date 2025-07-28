@@ -156,23 +156,33 @@ async function enviarKM() {
       datos.foto = await convertirImagenABase64(fotoInput.files[0]);
     }
 
-    const respuesta = await enviarConTimeout(
+    const respuestaRaw = await enviarConTimeout(
       "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
       datos,
       15000
     );
 
-    console.log("RESPUESTA KM:", respuesta); // 🐞 Debugging extra
+    console.log("RESPUESTA KM RAW:", respuestaRaw);
+
+    // 🧠 Asegurarse que sea un objeto
+    let respuesta;
+    if (typeof respuestaRaw === "string") {
+      try {
+        respuesta = JSON.parse(respuestaRaw);
+      } catch (e) {
+        throw new Error("La respuesta del servidor no es un JSON válido.");
+      }
+    } else {
+      respuesta = respuestaRaw;
+    }
 
     // 🔍 Interpretar respuesta con flexibilidad
     let mensajeFinal = "";
-
     if (Array.isArray(respuesta)) {
-      mensajeFinal = respuesta[0]?.mensaje || respuesta[0]?.Mensaje;
+      mensajeFinal = respuesta[0]?.mensaje || respuesta[0]?.Mensaje || respuesta[0]?.error;
     } else {
-      mensajeFinal = respuesta?.mensaje || respuesta?.Mensaje;
+      mensajeFinal = respuesta?.mensaje || respuesta?.Mensaje || respuesta?.error;
     }
-
 
     // 🚦 Evaluar éxito
     if (mensajeFinal === "Registro guardado correctamente") {
@@ -182,9 +192,9 @@ async function enviarKM() {
       document.getElementById('fotoOdometro').value = "";
       document.getElementById('fotoPreview').style.display = 'none';
     } else {
-      const errorMsg = mensajeFinal || respuesta?.error || "Error desconocido en el servidor";
-      
+      mostrarMensaje(`❌ Falló el envío: ${mensajeFinal}`, true);
     }
+
   } catch (error) {
     console.error("Error en enviarKM:", error);
     mostrarMensaje(`❌ Falló el envío: ${error.message}`, true);
