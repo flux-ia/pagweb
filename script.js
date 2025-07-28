@@ -173,6 +173,7 @@ async function enviarKM() {
       mensajeFinal = respuesta?.mensaje || respuesta?.Mensaje;
     }
 
+
     // 🚦 Evaluar éxito
     if (mensajeFinal === "Registro guardado correctamente") {
       mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
@@ -182,7 +183,7 @@ async function enviarKM() {
       document.getElementById('fotoPreview').style.display = 'none';
     } else {
       const errorMsg = mensajeFinal || respuesta?.error || "Error desconocido en el servidor";
-      throw new Error(errorMsg);
+      
     }
   } catch (error) {
     console.error("Error en enviarKM:", error);
