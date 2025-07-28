@@ -162,15 +162,26 @@ async function enviarKM() {
       15000
     );
 
-    if (respuesta && (respuesta.Mensaje === "Registro guardado correctamente" || respuesta.ok)) {
+    console.log("RESPUESTA KM:", respuesta); // 🐞 Debugging extra
+
+    // 🔍 Interpretar respuesta con flexibilidad
+    let mensajeFinal = "";
+
+    if (Array.isArray(respuesta)) {
+      mensajeFinal = respuesta[0]?.mensaje || respuesta[0]?.Mensaje;
+    } else {
+      mensajeFinal = respuesta?.mensaje || respuesta?.Mensaje;
+    }
+
+    // 🚦 Evaluar éxito
+    if (mensajeFinal === "Registro guardado correctamente") {
       mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
-      // Limpiar
       document.getElementById('patente').value = "";
       document.getElementById('kmFinal').value = "";
       document.getElementById('fotoOdometro').value = "";
       document.getElementById('fotoPreview').style.display = 'none';
     } else {
-      const errorMsg = respuesta?.error || respuesta?.Mensaje || "Error desconocido en el servidor";
+      const errorMsg = mensajeFinal || respuesta?.error || "Error desconocido en el servidor";
       throw new Error(errorMsg);
     }
   } catch (error) {
@@ -178,6 +189,7 @@ async function enviarKM() {
     mostrarMensaje(`❌ Falló el envío: ${error.message}`, true);
   }
 }
+
 
 // 🏷️ PEDIR ETIQUETAS
 function enviarEtiqueta() {
