@@ -129,6 +129,7 @@ function ocultarTodosLosFormularios() {
 }
 
 // ✅ ENVIAR REGISTRO DE KM
+// ✅ ENVIAR REGISTRO DE KM
 async function enviarKM() {
   const empleado  = document.getElementById('employeeName').textContent;
   const patente   = document.getElementById('patente').value;
@@ -185,23 +186,6 @@ async function enviarKM() {
     console.error("❌ Error en enviarKM:", error);
     mostrarMensaje("❌ No se pudo registrar los KM en el servidor.", true);
   });
-}
-
-    // 🚦 Evaluar éxito
-    if (mensajeFinal === "Registro guardado correctamente") {
-      mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
-      document.getElementById('patente').value = "";
-      document.getElementById('kmFinal').value = "";
-      document.getElementById('fotoOdometro').value = "";
-      document.getElementById('fotoPreview').style.display = 'none';
-    } else {
-      mostrarMensaje(`❌ Falló el envío: ${mensajeFinal}`, true);
-    }
-
-  } catch (error) {
-    console.error("Error en enviarKM:", error);
-    mostrarMensaje(`❌ Falló el envío: ${error.message}`, true);
-  }
 }
 
 
