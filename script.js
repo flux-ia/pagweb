@@ -164,13 +164,11 @@ async function enviarKM() {
   .then(res => res.json())
   .then(respuesta => {
     console.log("RESPUESTA KM:", respuesta);
-
+const mensaje = respuesta?.mensaje;
     if (!respuesta || typeof respuesta.Mensaje !== "string") {
       mostrarMensaje("❌ Respuesta inválida del servidor.", true);
       return;
     }
-
-    const mensaje = respuesta.Mensaje;
 
     if (mensaje === "Registro guardado correctamente") {
       mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
