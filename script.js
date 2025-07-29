@@ -156,23 +156,23 @@ async function enviarKM() {
     datos.foto = await convertirImagenABase64(fotoInput.files[0]);
   }
 
-  fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-    method : "POST",
-    headers: { "Content-Type": "application/json" },
-    body   : JSON.stringify(datos)
-  })
-  .then(res => res.json())
-  .then(respuesta => {
+  try {
+    const response = await fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
+      method : "POST",
+      headers: { "Content-Type": "application/json" },
+      body   : JSON.stringify(datos)
+    });
+
+    const respuesta = await response.json();
     console.log("RESPUESTA KM:", respuesta);
 
-  const mensaje = Array.isArray(respuesta)
-  ? respuesta[0]?.mensaje
-  : respuesta?.mensaje;
+    // ✅ Usamos 'Mensaje' con mayúscula
+    const mensaje = respuesta?.Mensaje;
 
-if (!mensaje || typeof mensaje !== "string") {
-  mostrarMensaje("❌ Respuesta inválida del servidor.", true);
-  return;
-}
+    if (!mensaje || typeof mensaje !== "string") {
+      mostrarMensaje("❌ Respuesta inválida del servidor.", true);
+      return;
+    }
 
     if (mensaje === "Registro guardado correctamente") {
       mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
@@ -183,11 +183,10 @@ if (!mensaje || typeof mensaje !== "string") {
     } else {
       mostrarMensaje(`❌ Error: ${mensaje}`, true);
     }
-  })
-  .catch(error => {
+  } catch (error) {
     console.error("❌ Error en enviarKM:", error);
     mostrarMensaje("❌ No se pudo registrar los KM en el servidor.", true);
-  });
+  }
 }
 
 
