@@ -46,15 +46,18 @@
   </div>
 
   <!-- DASHBOARD PRINCIPAL -->
-  <div class="dashboard hidden" id="dashboard">
-    <h2>¡Hola, <span id="employeeName"></span>!</h2>
-    <p>¿Qué querés hacer hoy?</p>
+<div class="dashboard hidden" id="dashboard">
+  <h2>
+    ¡Hola, <span id="employeeName"></span>! — 
+    <span id="employeePatrulla" class="text-blue-600"></span>
+  </h2>
+  <p>¿Qué querés hacer hoy?</p>
 
-    <button id="kmFormBtn"        onclick="showKmForm()">🚗 Cargar KM</button>
-    <button id="etiquetaFormBtn"  onclick="showEtiquetaForm()">🏷️ Pedir Etiquetas</button>
-    <button id="adminBtn" class="hidden" onclick="showCargaEtiquetas()">🧰 Registrar Nuevas Etiquetas</button>
-    <button id="misEtiquetasBtn" onclick="obtenerHistorialEtiquetas()">📋 Mis etiquetas</button>
-  </div>
+  <button id="kmFormBtn" onclick="showKmForm()">🚗 Cargar KM</button>
+  <button id="etiquetaFormBtn" onclick="showEtiquetaForm()">🏷️ Pedir Etiquetas</button>
+  <button id="adminBtn" class="hidden" onclick="showCargaEtiquetas()">🧰 Registrar Nuevas Etiquetas</button>
+  <button id="misEtiquetasBtn" onclick="obtenerHistorialEtiquetas()">📋 Mis etiquetas</button>
+</div>
 
   <!-- FORMULARIO CARGAR KM -->
   <div class="form-screen hidden" id="kmForm">
