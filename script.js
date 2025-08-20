@@ -16,7 +16,7 @@ const usuarios = {
   vaghioscar: "vaghioscar123",
   vaghipablo: "vaghipablo123",
   vaghiroque: "vaghiroque456",
-  
+
   // Usuarios técnicos
   aguirrez: "aguirrez1",
   alarcon: "alarcon1",
@@ -34,7 +34,7 @@ const usuarios = {
   cruz: "cruz123",
   diazluis: "diazluis1",
   diazmanuel: "diazmanuel1",
-  figueroa:"figueroa1",
+  figueroa: "figueroa1",
   galeassialexis: "galeassialexis1",
   galeassieric: "galeassieric1",
   gallegos: "gallegos123",
@@ -66,75 +66,237 @@ const usuarios = {
   tejedaadrian: "tejedaadrian",
   tejedaaldo: "tejedaaldo",
   trovato: "trovato123",
-  vaghi:"vaghi",
-  zelaya:"zelaya"
+  vaghi: "vaghi",
+  zelaya: "zelaya"
 };
+
+// 🧭 SECTOR POR USUARIO
+const userSector = {
+  // Admins (sin restricción; ver populatePatentesForUser)
+  adm: "ADMIN",
+  behm: "ADMIN",
+  bocchetto: "ADMIN",
+  bucala: "ADMIN",
+  chiner: "ADMIN",
+  estebaneugenia: "ADMIN",
+  estebanluciana: "ADMIN",
+  fernandezgaston: "ADMIN",
+  fernandezjuan: "ADMIN",
+  laubert: "ADMIN",
+  machaca: "ADMIN",
+  vaghioscar: "ADMIN",
+  vaghipablo: "ADMIN",
+  vaghiroque: "TUCUMÁN", // también técnico de este sector
+
+  // LA PLATA
+  aguirrez: "LA PLATA",
+  alejo: "LA PLATA",
+  mas: "LA PLATA",
+  ortizalejandro: "LA PLATA",
+  ortizoscar: "LA PLATA",
+  sartori: "LA PLATA",
+
+  // TUCUMÁN
+  alarcon: "TUCUMÁN",
+  beltran: "TUCUMÁN",
+  cruz: "TUCUMÁN",
+  gutierrez: "TUCUMÁN",
+  medinaalvaro: "TUCUMÁN",
+  navarro: "TUCUMÁN",
+  nieva: "TUCUMÁN",
+  olleta: "TUCUMÁN",
+  paz: "TUCUMÁN",
+  ruiz: "TUCUMÁN",
+  serrano: "TUCUMÁN",
+  zelaya: "TUCUMÁN",
+
+  // CÓRDOBA
+  aranda: "CÓRDOBA",
+  barraza: "CÓRDOBA",
+  caceres: "CÓRDOBA",
+  calderon: "CÓRDOBA",
+  cañette: "CÓRDOBA",
+  galeassialexis: "CÓRDOBA",
+  galeassieric: "CÓRDOBA",
+  gallegos: "CÓRDOBA",
+  griecco: "CÓRDOBA",
+  iglesiaspedro: "CÓRDOBA",
+  iglesiashugo: "CÓRDOBA",
+  presentado: "CÓRDOBA",
+  quiroga: "CÓRDOBA",
+  rios: "CÓRDOBA",
+  sanchez: "CÓRDOBA",
+  tejedaadrian: "CÓRDOBA",
+
+  // RÍO IV
+  batistini: "RÍO IV",
+  ceballos: "RÍO IV",
+  figueroa: "RÍO IV",
+  kunz: "RÍO IV",
+  lagos: "RÍO IV",
+
+  // BAHÍA BLANCA
+  quintaye: "BAHÍA BLANCA",
+  trovato: "BAHÍA BLANCA",
+
+  // SAN LUIS
+  cancino: "SAN LUIS",
+
+  // SALTA
+  cimino: "SALTA",
+  diazluis: "SALTA",
+  diazmanuel: "SALTA",
+  madariaga: "SALTA",
+
+  // No está más
+  mendoza: "NO ESTÁ MÁS",
+
+  // Otros sin sector específico (ajustar si corresponde)
+  medinaenzo: "CÓRDOBA",
+  vaghi: "CÓRDOBA"
+};
+
+// 🚗 PATENTES POR SECTOR
+const sectorPatentes = {
+  "LA PLATA": ["AA317PM", "AA420JU", "AH280OQ", "AH571SO", "NEO135", "PDY875", "PKZ249"],
+  "TUCUMÁN": ["AB403NQ", "AC079TW", "AD964TK", "AE017FB", "AH335IM", "NWX351", "PQE699"],
+  "CÓRDOBA": ["AA980XO"],
+  "RÍO IV": ["AB794YT", "AG727MO"],
+  "BAHÍA BLANCA": ["AA925PQ", "OIC618"],
+  "SAN LUIS": ["AE287YW"],
+  "SALTA": ["AH017QS", "KDG674", "OUM376"]
+};
+
+// 🧩 Utilidad: lista total de patentes (fallback)
+const TODAS_LAS_PATENTES = Array.from(new Set(Object.values(sectorPatentes).flat()));
+
+// 🧪 Descarga local de JSON (modo prueba)
+function descargarComoJSON(datos, nombre = "payload.json") {
+  const blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombre;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 // 🔐 LOGIN
 function login() {
-  const username = document.getElementById('username').value.trim().toLowerCase();
-  const pass     = document.getElementById('password').value.trim();
+  const username = document.getElementById("username").value.trim().toLowerCase();
+  const pass = document.getElementById("password").value.trim();
 
   if (!username || !pass) return mostrarMensaje("❗ Por favor completá ambos campos.", true);
   if (!(username in usuarios)) return mostrarMensaje("🚫 Usuario no registrado.", true);
   if (usuarios[username] !== pass) return mostrarMensaje("🔑 Contraseña incorrecta.", true);
 
+  // Ocultar cualquier cartel previo de error
+  const panel = document.getElementById("panelMensajes");
+  const cont = document.getElementById("contenidoMensaje");
+  if (panel) panel.classList.add("hidden");
+  if (cont) cont.innerHTML = "";
+
   // Mostrar panel principal
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('dashboard').classList.remove('hidden');
-  document.getElementById('employeeName').textContent = username;
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("employeeName").textContent = username;
+
+  // Mostrar patrulla en la UI
+  const patrullaUser = userSector[username] || "SIN PATRULLA";
+  const patrullaLabel = document.getElementById("employeePatrulla");
+  if (patrullaLabel) patrullaLabel.textContent = patrullaUser;
 
   // Botones según perfil
-  document.getElementById('kmFormBtn').classList.remove('hidden');
-  document.getElementById('etiquetaFormBtn').classList.remove('hidden');
-  document.getElementById('adminBtn').classList.toggle('hidden', username !== 'adm');
-   localStorage.setItem("username", username);
+  document.getElementById("kmFormBtn").classList.remove("hidden");
+  document.getElementById("etiquetaFormBtn").classList.remove("hidden");
+  document.getElementById("adminBtn").classList.toggle("hidden", username !== "adm");
+
+  // Guardar user y preparar patentes por sector
+  localStorage.setItem("username", username);
+  populatePatentesForUser(username); // por si entra directo a KM
 }
 
 // 🔁 MOSTRAR FORMULARIOS
 function showKmForm() {
-  document.getElementById('dashboard').classList.add('hidden');
-  document.getElementById('kmForm').classList.remove('hidden');
-  document.getElementById('fotoOdometro').value = "";
-  document.getElementById('fotoPreview').style.display = 'none';
+  const username = document.getElementById("employeeName").textContent;
+  populatePatentesForUser(username); // asegurar patentes del sector
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("kmForm").classList.remove("hidden");
+  document.getElementById("fotoOdometro").value = "";
+  document.getElementById("fotoPreview").style.display = "none";
 }
 
 function showEtiquetaForm() {
-  document.getElementById('dashboard').classList.add('hidden');
-  document.getElementById('etiquetaForm').classList.remove('hidden');
-  document.getElementById('cantidadEtiquetas').value = "";
-  document.getElementById('etiquetasAsignadas').style.display = 'none';
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("etiquetaForm").classList.remove("hidden");
+  document.getElementById("cantidadEtiquetas").value = "";
+  document.getElementById("etiquetasAsignadas").style.display = "none";
 }
 
 function showCargaEtiquetas() {
-  document.getElementById('dashboard').classList.add('hidden');
-  document.getElementById('registroEtiquetasForm').classList.remove('hidden');
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("registroEtiquetasForm").classList.remove("hidden");
 }
 
 function volver() {
-  document.getElementById('kmForm').classList.add('hidden');
-  document.getElementById('etiquetaForm').classList.add('hidden');
-  document.getElementById('registroEtiquetasForm').classList.add('hidden');
-  document.getElementById('panelMisEtiquetas').classList.add('hidden');
-  document.getElementById('panelMensajes').classList.add('hidden');
-  document.getElementById('dashboard').classList.remove('hidden');
+  document.getElementById("kmForm").classList.add("hidden");
+  document.getElementById("etiquetaForm").classList.add("hidden");
+  document.getElementById("registroEtiquetasForm").classList.add("hidden");
+  document.getElementById("panelMisEtiquetas").classList.add("hidden");
+  document.getElementById("panelMensajes").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
 }
 
 function ocultarTodosLosFormularios() {
-  document.getElementById('kmForm').classList.add('hidden');
-  document.getElementById('etiquetaForm').classList.add('hidden');
-  document.getElementById('registroEtiquetasForm').classList.add('hidden');
-  document.getElementById('panelMisEtiquetas').classList.add('hidden');
-  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById("kmForm").classList.add("hidden");
+  document.getElementById("etiquetaForm").classList.add("hidden");
+  document.getElementById("registroEtiquetasForm").classList.add("hidden");
+  document.getElementById("panelMisEtiquetas").classList.add("hidden");
+  document.getElementById("dashboard").classList.add("hidden");
+}
+
+// 👉 Rellena el <select id="patente"> con las patentes del sector del usuario
+function populatePatentesForUser(username) {
+  const select = document.getElementById("patente");
+  if (!select) return;
+
+  // Determinar sector del usuario
+  const sector = userSector[username];
+  let patentes = [];
+
+  if (sector === "ADMIN") {
+    // Admin ve todas las patentes
+    patentes = TODAS_LAS_PATENTES;
+  } else if (sector && sectorPatentes[sector]) {
+    patentes = sectorPatentes[sector];
+  } else {
+    // Fallback: todas
+    patentes = TODAS_LAS_PATENTES;
+  }
+
+  // Poblar el select
+  select.innerHTML = "";
+  if (patentes.length === 0) {
+    const opt = document.createElement("option");
+    opt.textContent = "Sin patentes disponibles";
+    opt.value = "";
+    select.appendChild(opt);
+  } else {
+    patentes.forEach((p) => {
+      const opt = document.createElement("option");
+      opt.textContent = p;
+      opt.value = p;
+      select.appendChild(opt);
+    });
+  }
 }
 
 // ✅ ENVIAR REGISTRO DE KM
-// ✅ ENVIAR REGISTRO DE KM
 async function enviarKM() {
-  const empleado  = document.getElementById('employeeName').textContent;
-  const patente   = document.getElementById('patente').value;
-  const kmFinal   = document.getElementById('kmFinal').value;
-  const fotoInput = document.getElementById('fotoOdometro');
+  const empleado = document.getElementById("employeeName").textContent;
+  const patente = document.getElementById("patente").value;
+  const kmFinal = document.getElementById("kmFinal").value;
+  const fotoInput = document.getElementById("fotoOdometro");
   const fechaHora = new Date().toLocaleString();
 
   if (!patente || !kmFinal) {
@@ -145,11 +307,12 @@ async function enviarKM() {
   mostrarMensaje("⏳ Enviando registro...", false, true);
 
   const datos = {
-    funcion : "registro_km",
-    usuario : empleado,
-    patente : patente,
+    funcion: "registro_km",
+    usuario: empleado,
+    patrulla: userSector[empleado] || "",
+    patente: patente,
     km_final: kmFinal,
-    fecha   : fechaHora
+    fecha: fechaHora
   };
 
   if (fotoInput.files[0]) {
@@ -157,18 +320,19 @@ async function enviarKM() {
   }
 
   try {
-    const response = await fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-      method : "POST",
-      headers: { "Content-Type": "application/json" },
-      body   : JSON.stringify(datos)
-    });
+    const response = await fetch(
+      "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos)
+      }
+    );
 
     const respuesta = await response.json();
     console.log("RESPUESTA KM:", respuesta);
 
-    // ✅ Usamos 'Mensaje' con mayúscula
     const mensaje = respuesta?.Mensaje;
-
     if (!mensaje || typeof mensaje !== "string") {
       mostrarMensaje("❌ Respuesta inválida del servidor.", true);
       return;
@@ -176,10 +340,10 @@ async function enviarKM() {
 
     if (mensaje === "Registro guardado correctamente") {
       mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
-      document.getElementById('patente').value = "";
-      document.getElementById('kmFinal').value = "";
-      document.getElementById('fotoOdometro').value = "";
-      document.getElementById('fotoPreview').style.display = 'none';
+      document.getElementById("patente").value = "";
+      document.getElementById("kmFinal").value = "";
+      document.getElementById("fotoOdometro").value = "";
+      document.getElementById("fotoPreview").style.display = "none";
     } else {
       mostrarMensaje(`❌ Error: ${mensaje}`, true);
     }
@@ -189,11 +353,10 @@ async function enviarKM() {
   }
 }
 
-
 // 🏷️ PEDIR ETIQUETAS
 function enviarEtiqueta() {
-  const empleado  = document.getElementById('employeeName').textContent;
-  const cantidad  = parseInt(document.getElementById('cantidadEtiquetas').value);
+  const empleado = document.getElementById("employeeName").textContent;
+  const cantidad = parseInt(document.getElementById("cantidadEtiquetas").value);
   const fechaHora = new Date().toLocaleString();
 
   if (isNaN(cantidad) || cantidad < 1) {
@@ -207,22 +370,26 @@ function enviarEtiqueta() {
     setTimeout(() => reject(new Error("⏰ Tiempo agotado: no se recibieron etiquetas.")), 30000)
   );
 
-  const fetchRequest = fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-    method : "POST",
-    headers: { "Content-Type": "application/json" },
-    body   : JSON.stringify({
-      funcion: "pedir_etiquetas",
-      usuario: empleado,
-      cantidad: cantidad,
-      fecha  : fechaHora
-    })
-  }).then(res => res.json());
+  const fetchRequest = fetch(
+    "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        funcion: "pedir_etiquetas",
+        usuario: empleado,
+        patrulla: userSector[empleado] || "",
+        cantidad: cantidad,
+        fecha: fechaHora
+      })
+    }
+  ).then((res) => res.json());
 
   Promise.race([fetchRequest, timeout])
-    .then(data => {
+    .then((data) => {
       const etiquetasDiv = document.getElementById("etiquetasAsignadas");
-      const listaUl      = document.getElementById("listaEtiquetas");
-      listaUl.innerHTML  = "";
+      const listaUl = document.getElementById("listaEtiquetas");
+      listaUl.innerHTML = "";
 
       if (!data.etiquetas || (Array.isArray(data.etiquetas) && data.etiquetas.length === 0)) {
         etiquetasDiv.style.display = "none";
@@ -233,7 +400,7 @@ function enviarEtiqueta() {
       const etiquetas = Array.isArray(data.etiquetas) ? data.etiquetas : [data.etiquetas];
 
       etiquetasDiv.style.display = "block";
-      etiquetas.forEach(etq => {
+      etiquetas.forEach((etq) => {
         const li = document.createElement("li");
         li.textContent = etq;
         listaUl.appendChild(li);
@@ -241,12 +408,14 @@ function enviarEtiqueta() {
 
       localStorage.setItem("etiquetasAsignadas", JSON.stringify(etiquetas));
 
-      mostrarMensaje(`✅ Pedido procesado correctamente.<br>
+      mostrarMensaje(
+        `✅ Pedido procesado correctamente.<br>
         <b>Cantidad:</b> ${cantidad}<br>
         <b>Fecha:</b> ${fechaHora}<br><br>
-        <b>Etiquetas asignadas:</b><br>${etiquetas.join("<br>")}`);
+        <b>Etiquetas asignadas:</b><br>${etiquetas.join("<br>")}`
+      );
     })
-    .catch(err => {
+    .catch((err) => {
       console.error("❌ Error al conectar con n8n:", err);
       mostrarMensaje(err.message || "❌ Error desconocido al pedir etiquetas.", true);
     });
@@ -254,9 +423,9 @@ function enviarEtiqueta() {
 
 // ✅ REGISTRAR NUEVAS ETIQUETAS (ADMIN)
 function registrarEtiquetas() {
-  const desde     = parseInt(document.getElementById("etiquetaInicio").value);
-  const hasta     = parseInt(document.getElementById("etiquetaFin").value);
-  const empleado  = document.getElementById('employeeName').textContent;
+  const desde = parseInt(document.getElementById("etiquetaInicio").value);
+  const hasta = parseInt(document.getElementById("etiquetaFin").value);
+  const empleado = document.getElementById("employeeName").textContent;
   const fechaHora = new Date().toLocaleString();
 
   if (isNaN(desde) || isNaN(hasta) || desde < 0 || hasta < desde) {
@@ -266,58 +435,57 @@ function registrarEtiquetas() {
 
   const etiquetas = [];
   for (let i = desde; i <= hasta; i++) {
-    etiquetas.push(`ETQ-${String(i).padStart(3, '0')}`);
+    etiquetas.push(`ETQ-${String(i).padStart(3, "0")}`);
   }
 
   const datos = {
-    funcion : "registro_etiquetas_admin",
-    usuario : empleado,
-    fecha   : fechaHora,
+    funcion: "registro_etiquetas_admin",
+    usuario: empleado,
+    patrulla: userSector[empleado] || "",
+    fecha: fechaHora,
     etiquetas
   };
 
   mostrarMensaje("⏳ Registrando nuevas etiquetas...");
 
   fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-    method : "POST",
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    body   : JSON.stringify(datos)
+    body: JSON.stringify(datos)
   })
-  .then(res => res.json())
-  .then(respuesta => {
-  if (!respuesta || typeof respuesta.Mensaje !== "string") {
-    mostrarMensaje("❌ Respuesta inválida del servidor.", true);
-    return;
-  }
+    .then((res) => res.json())
+    .then((respuesta) => {
+      if (!respuesta || typeof respuesta.Mensaje !== "string") {
+        mostrarMensaje("❌ Respuesta inválida del servidor.", true);
+        return;
+      }
 
-  console.log("RESPUESTA REGISTRO:", respuesta);
+      console.log("RESPUESTA REGISTRO:", respuesta);
+      const mensaje = respuesta.Mensaje;
 
-  const mensaje = respuesta.Mensaje;
-
-  if (mensaje.toLowerCase().includes("ya existen")) {
-    mostrarMensaje(`❌ Error: ${mensaje}`, true);
-  } else {
-    mostrarMensaje(
-      `✅ ${mensaje}<br><br>` +
-      `<b>Etiquetas:</b><br>${etiquetas.join("<br>")}<br><br>` +
-      `<b>Fecha:</b> ${fechaHora}`
-    );
-  }
-})
-
-  .catch(err => {
-    console.error("❌ Error al registrar etiquetas:", err);
-    mostrarMensaje("❌ No se pudo registrar las etiquetas en el servidor.", true);
-  });
+      if (mensaje.toLowerCase().includes("ya existen")) {
+        mostrarMensaje(`❌ Error: ${mensaje}`, true);
+      } else {
+        mostrarMensaje(
+          `✅ ${mensaje}<br><br>` +
+            `<b>Etiquetas:</b><br>${etiquetas.join("<br>")}<br><br>` +
+            `<b>Fecha:</b> ${fechaHora}`
+        );
+      }
+    })
+    .catch((err) => {
+      console.error("❌ Error al registrar etiquetas:", err);
+      mostrarMensaje("❌ No se pudo registrar las etiquetas en el servidor.", true);
+    });
 }
 
 // 🎯 PANEL DE MENSAJES
 function mostrarMensaje(mensaje, esError = false, esLoader = false) {
-  const panel     = document.getElementById("panelMensajes");
+  const panel = document.getElementById("panelMensajes");
   const contenido = document.getElementById("contenidoMensaje");
 
-  contenido.innerHTML     = esLoader ? `<div class="loader"></div><br>${mensaje}` : mensaje;
-  contenido.style.color   = esError ? "red" : "black";
+  contenido.innerHTML = esLoader ? `<div class="loader"></div><br>${mensaje}` : mensaje;
+  contenido.style.color = esError ? "red" : "black";
 
   ocultarTodosLosFormularios();
   panel.classList.remove("hidden");
@@ -327,7 +495,7 @@ function mostrarMensaje(mensaje, esError = false, esLoader = false) {
 function convertirImagenABase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload  = () => resolve(reader.result.split(',')[1]);
+    reader.onload = () => resolve(reader.result.split(",")[1]);
     reader.onerror = () => reject(new Error("Error al procesar la foto"));
     reader.readAsDataURL(file);
   });
@@ -335,25 +503,25 @@ function convertirImagenABase64(file) {
 
 async function enviarConTimeout(url, datos, timeoutMs) {
   const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
-      method : "POST",
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body   : JSON.stringify(datos),
-      signal : controller.signal
+      body: JSON.stringify(datos),
+      signal: controller.signal
     });
 
     clearTimeout(timeoutId);
     return await response.json();
   } catch (error) {
-    if (error.name === 'AbortError') throw new Error("El servidor no respondió a tiempo");
+    if (error.name === "AbortError") throw new Error("El servidor no respondió a tiempo");
     throw error;
   }
 }
 
-// 👀 HISTORIAL DE ETIQUETAS (VERSIÓN CORREGIDA)
+// 👀 HISTORIAL DE ETIQUETAS
 function obtenerHistorialEtiquetas() {
   const username = document.getElementById("employeeName").textContent;
 
@@ -363,71 +531,72 @@ function obtenerHistorialEtiquetas() {
   }
 
   mostrarMensaje("Consultando historial de etiquetas...");
-  
+
   fetch("https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ 
-  funcion: "historial_etiquetas", 
-  usuario: username 
-})
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      funcion: "historial_etiquetas",
+      usuario: username,
+      patrulla: userSector[username] || ""
+    })
   })
-  .then(response => response.json())
-.then(respuesta => {
-  console.log("RESPUESTA:", respuesta);
+    .then((response) => response.json())
+    .then((respuesta) => {
+      console.log("RESPUESTA:", respuesta);
 
-  let mensaje = null;
+      let mensaje = null;
+      if (Array.isArray(respuesta)) {
+        mensaje = respuesta[0]?.Mensaje;
+      } else if (respuesta?.Mensaje) {
+        mensaje = respuesta.Mensaje;
+      }
 
-  if (Array.isArray(respuesta)) {
-    mensaje = respuesta[0]?.Mensaje;
-  } else if (respuesta?.Mensaje) {
-    mensaje = respuesta.Mensaje;
-  }
+      const contenidoHistorial = mensaje
+        ? formatearHistorial(mensaje)
+        : "<p>No se encontró historial o el formato de respuesta es incorrecto.</p>";
 
-  const contenidoHistorial = mensaje
-    ? formatearHistorial(mensaje)
-    : "<p>No se encontró historial o el formato de respuesta es incorrecto.</p>";
+      const panelHistorial = document.getElementById("panelMisEtiquetas");
+      const contenidoHistorialDiv = document.getElementById("contenidoHistorial");
 
-  const panelHistorial = document.getElementById("panelMisEtiquetas");
-  const contenidoHistorialDiv = document.getElementById("contenidoHistorial");
-
-  contenidoHistorialDiv.innerHTML = contenidoHistorial;
-  document.getElementById("panelMensajes").classList.add("hidden"); // 👈 Este es el que oculta el recuadro de arriba
-  panelHistorial.classList.remove("hidden");
-})
-
-
-  .catch(error => {
-    console.error("Error obteniendo historial:", error);
-    mostrarMensaje("Error al consultar el historial.");
-  });
+      contenidoHistorialDiv.innerHTML = contenidoHistorial;
+      document.getElementById("panelMensajes").classList.add("hidden");
+      panelHistorial.classList.remove("hidden");
+    })
+    .catch((error) => {
+      console.error("Error obteniendo historial:", error);
+      mostrarMensaje("Error al consultar el historial.");
+    });
 }
+
 function formatearHistorial(mensajeN8N) {
   const bloques = mensajeN8N
-    .split('\n\n')
-    .filter(b => b.trim() !== '');
-    
+    .split("\n\n")
+    .filter((b) => b.trim() !== "");
+
   return bloques
-    .map(b => `<p>${b.replace(/\n/g, '<br>')}</p>`)
-    .join('');
+    .map((b) => `<p>${b.replace(/\n/g, "<br>")}</p>`)
+    .join("");
 }
 
 // 🚀 INICIALIZACIÓN
 document.addEventListener("DOMContentLoaded", () => {
   // Login con Enter
-  [document.getElementById("username"), document.getElementById("password")]
-    .forEach(i => i.addEventListener("keypress", e => e.key === "Enter" && login()));
+  [document.getElementById("username"), document.getElementById("password")].forEach((i) =>
+    i.addEventListener("keypress", (e) => e.key === "Enter" && login())
+  );
 
   // Preview foto odómetro
-  document.getElementById('fotoOdometro').addEventListener('change', e => {
-    const preview = document.getElementById('fotoPreview');
-    if (e.target.files[0]) {
-      preview.src = URL.createObjectURL(e.target.files[0]);
-      preview.style.display = 'block';
-    } else {
-      preview.style.display = 'none';
-    }
-  });
+  const fotoInput = document.getElementById("fotoOdometro");
+  if (fotoInput) {
+    fotoInput.addEventListener("change", (e) => {
+      const preview = document.getElementById("fotoPreview");
+      if (e.target.files[0]) {
+        preview.src = URL.createObjectURL(e.target.files[0]);
+        preview.style.display = "block";
+      } else {
+        preview.style.display = "none";
+      }
+    });
+  }
 });
