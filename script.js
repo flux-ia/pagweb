@@ -1,8 +1,18 @@
 // 🧠 BASE DE DATOS LOCAL DE USUARIOS
 const usuarios = {
   gaston: "gaston1",
-  adm: "adm1",
-  // Nuevos usuarios administrativos
+  adm: "adm1", // SUPERADMIN
+
+  // Admins por patrulla
+  admin_laplata: "adminlp1",
+  admin_cordoba: "admincba1",
+  admin_rioiv: "adminrio1",
+  admin_bahiablanca: "adminbb1",
+  admin_sanluis: "adminsl1",
+  admin_salta: "adminsa1",
+  admin_tucuman: "admintuc1",
+
+  // Nuevos usuarios administrativos (pueden ser SUPERADMIN si querés)
   behm: "behm123",
   bocchetto: "boc123",
   bucala: "bucala123",
@@ -70,23 +80,42 @@ const usuarios = {
   zelaya: "zelaya"
 };
 
-// 🧭 SECTOR POR USUARIO
+// 🧑‍⚖️ ROLES
+// SUPERADMIN: ve todas las patentes y tiene botón Admin
+// ADMIN: ve solo su patrulla y tiene botón Admin
+// TECNICO: ve solo su patrulla
+const userRole = {
+  adm: "SUPERADMIN",
+
+  // Admins por patrulla
+  admin_laplata: "ADMIN",
+  admin_cordoba: "ADMIN",
+  admin_rioiv: "ADMIN",
+  admin_bahiablanca: "ADMIN",
+  admin_sanluis: "ADMIN",
+  admin_salta: "ADMIN",
+  admin_tucuman: "ADMIN",
+
+  // Si querés que alguna de estas sea SUPERADMIN, agregala acá como "SUPERADMIN"
+  // behm: "SUPERADMIN", ...
+};
+
+const getRole   = (u) => userRole[u] || "TECNICO";
+const getSector = (u) => userSector[u] || null;
+
+// 🧭 SECTOR (PATRULLA) POR USUARIO
 const userSector = {
-  // Admins (sin restricción; ver populatePatentesForUser)
-  adm: "ADMIN",
-  behm: "ADMIN",
-  bocchetto: "ADMIN",
-  bucala: "ADMIN",
-  chiner: "ADMIN",
-  estebaneugenia: "ADMIN",
-  estebanluciana: "ADMIN",
-  fernandezgaston: "ADMIN",
-  fernandezjuan: "ADMIN",
-  laubert: "ADMIN",
-  machaca: "ADMIN",
-  vaghioscar: "ADMIN",
-  vaghipablo: "ADMIN",
-  vaghiroque: "TUCUMÁN", // también técnico de este sector
+  // Admins por patrulla
+  admin_laplata: "LA PLATA",
+  admin_cordoba: "CÓRDOBA",
+  admin_rioiv: "RÍO IV",
+  admin_bahiablanca: "BAHÍA BLANCA",
+  admin_sanluis: "SAN LUIS",
+  admin_salta: "SALTA",
+  admin_tucuman: "TUCUMÁN",
+
+  // (vaghiroque es técnico/coord. en TUCUMÁN)
+  vaghiroque: "TUCUMÁN",
 
   // LA PLATA
   aguirrez: "LA PLATA",
@@ -190,6 +219,8 @@ function login() {
   if (!(username in usuarios)) return mostrarMensaje("🚫 Usuario no registrado.", true);
   if (usuarios[username] !== pass) return mostrarMensaje("🔑 Contraseña incorrecta.", true);
 
+  const role = getRole(username);
+
   // Ocultar cualquier cartel previo de error
   const panel = document.getElementById("panelMensajes");
   const cont = document.getElementById("contenidoMensaje");
@@ -202,14 +233,14 @@ function login() {
   document.getElementById("employeeName").textContent = username;
 
   // Mostrar patrulla en la UI
-  const patrullaUser = userSector[username] || "SIN PATRULLA";
+  const patrullaUser = getSector(username) || (role === "SUPERADMIN" ? "TODAS" : "SIN PATRULLA");
   const patrullaLabel = document.getElementById("employeePatrulla");
   if (patrullaLabel) patrullaLabel.textContent = patrullaUser;
 
   // Botones según perfil
   document.getElementById("kmFormBtn").classList.remove("hidden");
   document.getElementById("etiquetaFormBtn").classList.remove("hidden");
-  document.getElementById("adminBtn").classList.toggle("hidden", username !== "adm");
+  document.getElementById("adminBtn").classList.toggle("hidden", !(role === "ADMIN" || role === "SUPERADMIN"));
 
   // Guardar user y preparar patentes por sector
   localStorage.setItem("username", username);
@@ -219,7 +250,7 @@ function login() {
 // 🔁 MOSTRAR FORMULARIOS
 function showKmForm() {
   const username = document.getElementById("employeeName").textContent;
-  populatePatentesForUser(username); // asegurar patentes del sector
+  populatePatentesForUser(username);
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("kmForm").classList.remove("hidden");
   document.getElementById("fotoOdometro").value = "";
@@ -260,18 +291,17 @@ function populatePatentesForUser(username) {
   const select = document.getElementById("patente");
   if (!select) return;
 
-  // Determinar sector del usuario
-  const sector = userSector[username];
+  const role   = getRole(username);
+  const sector = getSector(username);
   let patentes = [];
 
-  if (sector === "ADMIN") {
-    // Admin ve todas las patentes
-    patentes = TODAS_LAS_PATENTES;
-  } else if (sector && sectorPatentes[sector]) {
-    patentes = sectorPatentes[sector];
+  if (role === "SUPERADMIN") {
+    patentes = TODAS_LAS_PATENTES; // ve todo
+  } else if (role === "ADMIN") {
+    patentes = sector && sectorPatentes[sector] ? sectorPatentes[sector] : [];
   } else {
-    // Fallback: todas
-    patentes = TODAS_LAS_PATENTES;
+    // Técnico
+    patentes = sector && sectorPatentes[sector] ? sectorPatentes[sector] : TODAS_LAS_PATENTES;
   }
 
   // Poblar el select
@@ -309,7 +339,7 @@ async function enviarKM() {
   const datos = {
     funcion: "registro_km",
     usuario: empleado,
-    patrulla: userSector[empleado] || "",
+    patrulla: getSector(empleado) || "",
     patente: patente,
     km_final: kmFinal,
     fecha: fechaHora
@@ -378,7 +408,7 @@ function enviarEtiqueta() {
       body: JSON.stringify({
         funcion: "pedir_etiquetas",
         usuario: empleado,
-        patrulla: userSector[empleado] || "",
+        patrulla: getSector(empleado) || "",
         cantidad: cantidad,
         fecha: fechaHora
       })
@@ -441,7 +471,7 @@ function registrarEtiquetas() {
   const datos = {
     funcion: "registro_etiquetas_admin",
     usuario: empleado,
-    patrulla: userSector[empleado] || "",
+    patrulla: getSector(empleado) || "",
     fecha: fechaHora,
     etiquetas
   };
@@ -538,7 +568,7 @@ function obtenerHistorialEtiquetas() {
     body: JSON.stringify({
       funcion: "historial_etiquetas",
       usuario: username,
-      patrulla: userSector[username] || ""
+      patrulla: getSector(username) || ""
     })
   })
     .then((response) => response.json())
