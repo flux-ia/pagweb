@@ -58,7 +58,7 @@ const usuarios = {
   mas: "mas123",
   medinaalvaro: "medinaalvaro",
   medinaenzo: "medinaenzo",
-  mendoza: "mendoza123",
+  
   navarro: "navarro123",
   nieva: "nieva123",
   olleta: "olleta123",
@@ -76,7 +76,7 @@ const usuarios = {
   tejedaadrian: "tejedaadrian",
   tejedaaldo: "tejedaaldo",
   trovato: "trovato123",
-  vaghi: "vaghi",
+  vaghiroque: "vaghi",
   zelaya: "zelaya"
 };
 
@@ -137,6 +137,7 @@ const userSector = {
   paz: "TUCUMÁN",
   ruiz: "TUCUMÁN",
   serrano: "TUCUMÁN",
+  vaghiroque: "TUCUMÁN",
   zelaya: "TUCUMÁN",
 
   // CÓRDOBA
@@ -177,12 +178,11 @@ const userSector = {
   diazmanuel: "SALTA",
   madariaga: "SALTA",
 
-  // No está más
-  mendoza: "NO ESTÁ MÁS",
+  
 
   // Otros sin sector específico (ajustar si corresponde)
   medinaenzo: "CÓRDOBA",
-  vaghi: "CÓRDOBA"
+  
 };
 
 // 🚗 PATENTES POR SECTOR
@@ -199,16 +199,7 @@ const sectorPatentes = {
 // 🧩 Utilidad: lista total de patentes (fallback)
 const TODAS_LAS_PATENTES = Array.from(new Set(Object.values(sectorPatentes).flat()));
 
-// 🧪 Descarga local de JSON (modo prueba)
-function descargarComoJSON(datos, nombre = "payload.json") {
-  const blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = nombre;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+
 
 // 🔐 LOGIN
 function login() {
@@ -630,3 +621,4 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
