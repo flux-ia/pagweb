@@ -324,6 +324,10 @@ async function enviarKM() {
     mostrarMensaje("🚗 Completá todos los campos para registrar KM.", true);
     return;
   }
+if (!fotoInput.files[0]) {
+  mostrarMensaje("📷 Tenés que subir una foto del odómetro para registrar los KM.", true);
+  return;
+}
 
   mostrarMensaje("⏳ Enviando registro...", false, true);
 
@@ -621,5 +625,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
 
