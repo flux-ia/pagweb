@@ -189,7 +189,7 @@ const userSector = {
 const sectorPatentes = {
   "LA PLATA": ["AA317PM", "AA420JU", "AH280OQ", "AH571SO", "NEO135", "PDY875", "PKZ249"],
   "TUCUMÁN": ["AB403NQ", "AC079TW", "AD964TK", "AE017FB", "AH335IM", "NWX351", "PQE699"],
-  "CÓRDOBA": ["AA980XO"],
+  "CÓRDOBA": ["AA980XO","AB861HC","AC111MD","AD964TJ","AE327LO","AE464FY","AE683IX","AE727HQ","AF766ZB","AG883IG","AH335FM","ITJ845","IUY548","IVZ434","NEO134","OPC046","OXJ953"],
   "RÍO IV": ["AB794YT", "AG727MO"],
   "BAHÍA BLANCA": ["AA925PQ", "OIC618"],
   "SAN LUIS": ["AE287YW"],
@@ -621,4 +621,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
