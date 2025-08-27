@@ -112,7 +112,14 @@
     <img id="fotoPreview" alt="Vista previa de la foto" />
 
     <label>Cargue el Km</label>
-    <input type="text" id="kmFinal" placeholder="Ingresá el KM actual" />
+    <input 
+  type="number" 
+  id="kmFinal" 
+  placeholder="Ingresá el KM actual" 
+  min="0" 
+  step="1" 
+  oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+/>
 
     <button onclick="enviarKM()">Enviar</button>
     <button onclick="volver()">Volver</button>
@@ -167,3 +174,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
