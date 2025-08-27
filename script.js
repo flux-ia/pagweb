@@ -325,7 +325,7 @@ async function enviarKM() {
     return;
   }
 if (!fotoInput.files[0]) {
-  mostrarMensaje("📷 Tenés que subir una foto del odómetro para registrar los KM.", true);
+  mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true);
   return;
 }
 
@@ -625,6 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
 
 
