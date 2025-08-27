@@ -412,34 +412,49 @@ function enviarEtiqueta() {
 
   Promise.race([fetchRequest, timeout])
     .then((data) => {
-      const etiquetasDiv = document.getElementById("etiquetasAsignadas");
-      const listaUl = document.getElementById("listaEtiquetas");
-      listaUl.innerHTML = "";
+  const etiquetasDiv = document.getElementById("etiquetasAsignadas");
+  const listaUl = document.getElementById("listaEtiquetas");
+  listaUl.innerHTML = "";
 
-      if (!data.etiquetas || (Array.isArray(data.etiquetas) && data.etiquetas.length === 0)) {
-        etiquetasDiv.style.display = "none";
-        mostrarMensaje("⚠️ No hay etiquetas disponibles en este momento.", true);
-        return;
-      }
+  if (!data.etiquetas || (Array.isArray(data.etiquetas) && data.etiquetas.length === 0)) {
+    etiquetasDiv.style.display = "none";
+    mostrarMensaje("⚠️ No hay etiquetas disponibles en este momento.", true);
+    return;
+  }
 
-      const etiquetas = Array.isArray(data.etiquetas) ? data.etiquetas : [data.etiquetas];
+  // Normalizar a array
+  const etiquetas = Array.isArray(data.etiquetas) ? data.etiquetas : [data.etiquetas];
+  const recibidas = etiquetas.length;
 
-      etiquetasDiv.style.display = "block";
-      etiquetas.forEach((etq) => {
-        const li = document.createElement("li");
-        li.textContent = etq;
-        listaUl.appendChild(li);
-      });
+  // Mostrar lista visual
+  etiquetasDiv.style.display = "block";
+  etiquetas.forEach((etq) => {
+    const li = document.createElement("li");
+    li.textContent = etq;
+    listaUl.appendChild(li);
+  });
 
-      localStorage.setItem("etiquetasAsignadas", JSON.stringify(etiquetas));
+  // Guardar localmente
+  localStorage.setItem("etiquetasAsignadas", JSON.stringify(etiquetas));
 
-      mostrarMensaje(
-        `✅ Pedido procesado correctamente.<br>
-        <b>Cantidad:</b> ${cantidad}<br>
-        <b>Fecha:</b> ${fechaHora}<br><br>
-        <b>Etiquetas asignadas:</b><br>${etiquetas.join("<br>")}`
-      );
-    })
+  // Mensaje base
+  let msg =
+    `✅ Pedido procesado correctamente.<br>` +
+    `<b>Cantidad solicitada:</b> ${cantidad}<br>` +
+    `<b>Fecha:</b> ${fechaHora}<br><br>` +
+    `<b>Etiquetas asignadas:</b><br>${etiquetas.join("<br>")}`;
+
+  // Aviso si vinieron menos que las pedidas
+  if (recibidas < cantidad) {
+    const faltan = cantidad - recibidas;
+    msg +=
+      `<br><br><b>⚠️ Solo había ${recibidas} disponible${recibidas === 1 ? "" : "s"}.</b> ` +
+      `(${faltan} pendiente${faltan === 1 ? "" : "s"})`;
+  }
+
+  mostrarMensaje(msg);
+})
+
     .catch((err) => {
       console.error("❌ Error al conectar con n8n:", err);
       mostrarMensaje(err.message || "❌ Error desconocido al pedir etiquetas.", true);
@@ -625,6 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
 
 
