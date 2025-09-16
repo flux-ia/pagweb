@@ -181,7 +181,7 @@ const userSector = {
   
 
   // Otros sin sector específico (ajustar si corresponde)
-  medinaenzo: "CÓRDOBA",
+  medinaenzo: "TUCUMÁN",
   
 };
 
@@ -640,6 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
 
 
