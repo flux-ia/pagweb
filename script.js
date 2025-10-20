@@ -1,3 +1,59 @@
+// Detectar si la conexión es celular para ajustar timeout
+function isCellular() {
+  const c = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
+  return !!(c && (c.type === 'cellular' || (c.effectiveType && /2g|3g|slow-2g/.test(c.effectiveType))));
+}
+
+// Comprimir imagen ANTES de pasarla a base64 (mismo campo `foto` que ya usás)
+async function compressFileToBase64(file, maxW = 1200, quality = 0.7) {
+  // si no es imagen o es muy chica, seguimos como antes
+  if (!file.type.startsWith('image/')) {
+    return convertirImagenABase64(file); // tu función actual
+  }
+  const img = await new Promise((res, rej) => {
+    const o = new Image();
+    o.onload = () => res(o);
+    o.onerror = rej;
+    o.src = URL.createObjectURL(file);
+  });
+  const scale = Math.min(1, maxW / (img.naturalWidth || img.width || maxW));
+  // si ya es chica, no tocamos nada
+  if (scale >= 1) return convertirImagenABase64(file);
+
+  const w = Math.round((img.naturalWidth || img.width) * scale);
+  const h = Math.round((img.naturalHeight || img.height) * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  const dataUrl = canvas.toDataURL('image/jpeg', quality);
+  return dataUrl.split(',')[1]; // base64 (igual que tu función actual)
+}
+
+// Wrapper de fetch con timeout + reintentos (no cambia headers ni body)
+async function fetchJSONWithRetry(url, options, {
+  tries = 3,
+  timeoutMs = isCellular() ? 15000 : 8000
+} = {}) {
+  let wait = 800;
+  for (let i = 0; i < tries; i++) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...options, signal: ctrl.signal, cache: 'no-store', keepalive: true });
+      clearTimeout(t);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      return text ? JSON.parse(text) : {};
+    } catch (e) {
+      clearTimeout(t);
+      if (i === tries - 1) throw e;
+      await new Promise(s => setTimeout(s, wait));
+      wait = Math.min(wait * 2, 3000); // backoff suave
+    }
+  }
+}
+
 // 🧠 BASE DE DATOS LOCAL DE USUARIOS
 const usuarios = {
   gaston: "gaston1",
@@ -341,45 +397,48 @@ if (!fotoInput.files[0]) {
   };
 
   if (fotoInput.files[0]) {
-    datos.foto = await convertirImagenABase64(fotoInput.files[0]);
+    datos.foto = await compressFileToBase64(fotoInput.files[0], 1200, 0.7);
   }
 
   try {
-    const response = await fetch(
-      "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datos)
-      }
-    );
+  // Anti doble-submit (opcional rápido)
+  if (enviarKM._inflight) return;
+  enviarKM._inflight = true;
 
-    const respuesta = await response.json();
-    console.log("RESPUESTA KM:", respuesta);
+  const respuesta = await fetchJSONWithRetry(
+    "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos)
+    },
+    { tries: 3 } // mantiene JSON, solo agrega reintentos/timeout
+  );
 
-    const mensaje = respuesta?.Mensaje;
-    if (!mensaje || typeof mensaje !== "string") {
-      mostrarMensaje("❌ Respuesta inválida del servidor.", true);
-      return;
-    }
+  console.log("RESPUESTA KM:", respuesta);
+  const mensaje = respuesta?.Mensaje;
 
-    if (mensaje === "Registro guardado correctamente") {
-      mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
-      document.getElementById("patente").value = "";
-      document.getElementById("kmFinal").value = "";
-      document.getElementById("fotoOdometro").value = "";
-      document.getElementById("fotoPreview").style.display = "none";
-    } else {
-      mostrarMensaje(`❌ Error: ${mensaje}`, true);
-    }
-  } catch (error) {
-    console.error("❌ Error en enviarKM:", error);
-    mostrarMensaje("❌ No se pudo registrar los KM en el servidor.", true);
+  if (!mensaje || typeof mensaje !== "string") {
+    mostrarMensaje("❌ Respuesta inválida del servidor.", true);
+  } else if (mensaje === "Registro guardado correctamente") {
+    mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
+    document.getElementById("patente").value = "";
+    document.getElementById("kmFinal").value = "";
+    document.getElementById("fotoOdometro").value = "";
+    document.getElementById("fotoPreview").style.display = "none";
+  } else {
+    mostrarMensaje(`❌ Error: ${mensaje}`, true);
   }
+} catch (error) {
+  console.error("❌ Error en enviarKM:", error);
+  mostrarMensaje("❌ Conexión inestable: reintentá en unos segundos.", true);
+} finally {
+  enviarKM._inflight = false;
 }
 
 // 🏷️ PEDIR ETIQUETAS
-function enviarEtiqueta() {
+// 🏷️ PEDIR ETIQUETAS (versión cambio mínimo con fetchJSONWithRetry)
+async function enviarEtiqueta() {
   const empleado = document.getElementById("employeeName").textContent;
   const cantidad = parseInt(document.getElementById("cantidadEtiquetas").value);
   const fechaHora = new Date().toLocaleString();
@@ -389,77 +448,80 @@ function enviarEtiqueta() {
     return;
   }
 
-  mostrarMensaje("⏳ Enviando pedido al servidor... Esperando respuesta...");
+  // Anti doble-submit (opcional y reversible)
+  if (enviarEtiqueta._inflight) return;
+  enviarEtiqueta._inflight = true;
 
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("⏰ Tiempo agotado: no se recibieron etiquetas.")), 30000)
-  );
+  try {
+    mostrarMensaje("⏳ Enviando pedido al servidor... Esperando respuesta...");
 
-  const fetchRequest = fetch(
-    "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        funcion: "pedir_etiquetas",
-        usuario: empleado,
-        patrulla: getSector(empleado) || "",
-        cantidad: cantidad,
-        fecha: fechaHora
-      })
+    const payload = {
+      funcion: "pedir_etiquetas",
+      usuario: empleado,
+      patrulla: getSector(empleado) || "",
+      cantidad: cantidad,
+      fecha: fechaHora
+    };
+
+    const data = await fetchJSONWithRetry(
+      "https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      },
+      { tries: 3 } // reintentos suaves + timeout adaptado (helpers)
+    );
+
+    const etiquetasDiv = document.getElementById("etiquetasAsignadas");
+    const listaUl = document.getElementById("listaEtiquetas");
+    listaUl.innerHTML = "";
+
+    if (!data.etiquetas || (Array.isArray(data.etiquetas) && data.etiquetas.length === 0)) {
+      etiquetasDiv.style.display = "none";
+      mostrarMensaje("⚠️ No hay etiquetas disponibles en este momento.", true);
+      return;
     }
-  ).then((res) => res.json());
 
-  Promise.race([fetchRequest, timeout])
-    .then((data) => {
-  const etiquetasDiv = document.getElementById("etiquetasAsignadas");
-  const listaUl = document.getElementById("listaEtiquetas");
-  listaUl.innerHTML = "";
+    // Normalizar a array
+    const etiquetas = Array.isArray(data.etiquetas) ? data.etiquetas : [data.etiquetas];
+    const recibidas = etiquetas.length;
 
-  if (!data.etiquetas || (Array.isArray(data.etiquetas) && data.etiquetas.length === 0)) {
-    etiquetasDiv.style.display = "none";
-    mostrarMensaje("⚠️ No hay etiquetas disponibles en este momento.", true);
-    return;
-  }
-
-  // Normalizar a array
-  const etiquetas = Array.isArray(data.etiquetas) ? data.etiquetas : [data.etiquetas];
-  const recibidas = etiquetas.length;
-
-  // Mostrar lista visual
-  etiquetasDiv.style.display = "block";
-  etiquetas.forEach((etq) => {
-    const li = document.createElement("li");
-    li.textContent = etq;
-    listaUl.appendChild(li);
-  });
-
-  // Guardar localmente
-  localStorage.setItem("etiquetasAsignadas", JSON.stringify(etiquetas));
-
-  // Mensaje base
-  let msg =
-    `✅ Pedido procesado correctamente.<br>` +
-    `<b>Cantidad solicitada:</b> ${cantidad}<br>` +
-    `<b>Fecha:</b> ${fechaHora}<br><br>` +
-    `<b>Etiquetas asignadas:</b><br>${etiquetas.join("<br>")}`;
-
-  // Aviso si vinieron menos que las pedidas
-  if (recibidas < cantidad) {
-    const faltan = cantidad - recibidas;
-    msg +=
-      `<br><br><b>⚠️ Solo había ${recibidas} disponible${recibidas === 1 ? "" : "s"}.</b> ` +
-      `(${faltan} pendiente${faltan === 1 ? "" : "s"})`;
-  }
-
-  mostrarMensaje(msg);
-})
-
-    .catch((err) => {
-      console.error("❌ Error al conectar con n8n:", err);
-      mostrarMensaje(err.message || "❌ Error desconocido al pedir etiquetas.", true);
+    // Mostrar lista visual
+    etiquetasDiv.style.display = "block";
+    etiquetas.forEach((etq) => {
+      const li = document.createElement("li");
+      li.textContent = etq;
+      listaUl.appendChild(li);
     });
+
+    // Guardar localmente
+    localStorage.setItem("etiquetasAsignadas", JSON.stringify(etiquetas));
+
+    // Mensaje base
+    let msg =
+      `✅ Pedido procesado correctamente.<br>` +
+      `<b>Cantidad solicitada:</b> ${cantidad}<br>` +
+      `<b>Fecha:</b> ${fechaHora}<br><br>` +
+      `<b>Etiquetas asignadas:</b><br>${etiquetas.join("<br>")}`;
+
+    // Aviso si vinieron menos que las pedidas
+    if (recibidas < cantidad) {
+      const faltan = cantidad - recibidas;
+      msg +=
+        `<br><br><b>⚠️ Solo había ${recibidas} disponible${recibidas === 1 ? "" : "s"}.</b> ` +
+        `(${faltan} pendiente${faltan === 1 ? "" : "s"})`;
+    }
+
+    mostrarMensaje(msg);
+  } catch (err) {
+    console.error("❌ Error al conectar con n8n:", err);
+    mostrarMensaje(err.message || "❌ Error desconocido al pedir etiquetas.", true);
+  } finally {
+    enviarEtiqueta._inflight = false;
+  }
 }
+
 
 // ✅ REGISTRAR NUEVAS ETIQUETAS (ADMIN)
 function registrarEtiquetas() {
@@ -640,6 +702,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
 
 
