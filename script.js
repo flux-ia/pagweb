@@ -38,44 +38,57 @@ async function compressFileToBase64(file, maxW = 1200, quality = 0.7) {
 }
 
 // Wrapper de fetch con timeout + reintentos (no cambia headers ni body)
+// Función COMPLETA para reemplazar en tu archivo .js
 async function fetchJSONWithRetry(url, options, {
   tries = 3,
-  // --- CAMBIO CLAVE ---
-  // Aumentamos el timeout a 45 segundos para darle más tiempo al servidor de n8n.
   timeoutMs = 45000
 } = {}) {
+
+  // URL de tu workflow que solo recibe errores
+  const ERROR_WEBHOOK_URL = 'https://fluxian8n-n8n.mpgtdy.easypanel.host/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14';
+
   let wait = 800;
   for (let i = 0; i < tries; i++) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
+
     try {
-      const res = await fetch(url, { ...options,
-        signal: ctrl.signal,
-        cache: 'no-store',
-        keepalive: true
-      });
+      // Intenta la petición normal a tu webhook principal
+      const res = await fetch(url, { ...options, signal: ctrl.signal, cache: 'no-store', keepalive: true });
       clearTimeout(t);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
-      // Intenta parsear como JSON, si falla, devuelve el texto crudo.
-      try {
-        return text ? JSON.parse(text) : {};
-      } catch {
-        return {
-          raw: text
-        };
-      }
-    } catch (e) {
+      try { return text ? JSON.parse(text) : {}; } catch { return { raw: text }; }
+
+    } catch (error) {
       clearTimeout(t);
-      // Si este es el último intento, lanza el error para que se vea en la UI.
-      if (i === tries - 1) throw e;
-      // Espera un poco antes de reintentar.
+
+      // SI LA PETICIÓN FALLA, SE EJECUTA ESTO:
+      const errorData = {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        url: url,
+        attempt: i + 1,
+        userAgent: navigator.userAgent
+      };
+
+      // Envía el detalle del error a tu webhook espía
+      fetch(ERROR_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(errorData),
+        keepalive: true
+      });
+      // ---------------------------------------------
+
+      if (i === tries - 1) throw error; 
+      
       await new Promise(s => setTimeout(s, wait));
-      wait = Math.min(wait * 2, 4000); // Aumenta la espera en cada reintento
+      wait = Math.min(wait * 2, 4000);
     }
   }
 }
-
 /* ===========================
   Datos de usuarios / sectores
   =========================== */
@@ -735,3 +748,4 @@ Object.assign(window, {
   registrarEtiquetas,
   obtenerHistorialEtiquetas
 });
+
