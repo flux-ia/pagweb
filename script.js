@@ -194,11 +194,11 @@ async function enviarKM() {
   const fotoInput = document.getElementById("fotoOdometro");
   const fechaHora = new Date().toLocaleString();
   if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá todos los campos para registrar KM.", true);
-  if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true);
+  //if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true);
 
   mostrarMensaje("⏳ Enviando registro...", false, true);
   const datos = { funcion: "registro_km", usuario: empleado, patrulla: getSector(empleado) || "", patente, km_final: kmFinal, fecha: fechaHora };
-  if (fotoInput.files[0]) {
+  /if (fotoInput.files[0]) {
     datos.foto = await compressFileToBase64(fotoInput.files[0]);
   }
   try {
@@ -217,8 +217,8 @@ async function enviarKM() {
     } else if (mensaje === "Registro guardado correctamente") {
       mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
       document.getElementById("kmFinal").value = "";
-      document.getElementById("fotoOdometro").value = "";
-      document.getElementById("fotoPreview").style.display = "none";
+      /document.getElementById("fotoOdometro").value = "";
+      /document.getElementById("fotoPreview").style.display = "none";
     } else {
       mostrarMensaje(`❌ Error: ${mensaje}`, true);
     }
@@ -421,4 +421,5 @@ Object.assign(window, {
   registrarEtiquetas,
   obtenerHistorialEtiquetas
 });
+
 
