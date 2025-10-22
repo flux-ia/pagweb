@@ -172,17 +172,25 @@ async function enviarKM() {
   const empleado = document.getElementById("employeeName").textContent;
   const patente = document.getElementById("patente").value;
   const kmFinal = document.getElementById("kmFinal").value;
-  const fotoInput = document.getElementById("fotoOdometro");
+  /const fotoInput = document.getElementById("fotoOdometro");
   const fechaHora = new Date().toLocaleString();
 
   if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá todos los campos para registrar KM.", true);
-  if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true); // Volvimos a requerir foto
+ / if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true); // Volvimos a requerir foto
 
   mostrarMensaje("⏳ Enviando registro...", false, true);
-  const datos = { funcion: "registro_km", usuario: empleado, patrulla: getSector(empleado) || "", patente, km_final: kmFinal, fecha: fechaHora };
+  const datos = {
+    funcion: "registro_km",
+    usuario: empleado,
+    patrulla: getSector(empleado) || "",
+    patente,
+    km_final: kmFinal,
+    fecha: fechaHora
+    // No incluimos datos.foto
+  };
 
   // Volvimos a usar convertirImagenABase64 (sin compresión extra)
-  if (fotoInput.files[0]) {
+  /*if (fotoInput.files[0]) {
       try {
           datos.foto = await convertirImagenABase64(fotoInput.files[0]);
       } catch (imgError) {
@@ -190,7 +198,7 @@ async function enviarKM() {
           mostrarMensaje("❌ Error al procesar la foto. Intenta con otra imagen.", true);
           return; // Detener si falla la conversión
       }
-  }
+  }*/
 
   try {
     if (enviarKM._inflight) return;
@@ -208,8 +216,8 @@ async function enviarKM() {
     } else if (mensaje === "Registro guardado correctamente") {
       mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
       document.getElementById("kmFinal").value = "";
-      document.getElementById("fotoOdometro").value = ""; // Limpiar input de foto
-      document.getElementById("fotoPreview").style.display = "none"; // Ocultar preview
+      /document.getElementById("fotoOdometro").value = ""; // Limpiar input de foto
+      /document.getElementById("fotoPreview").style.display = "none"; // Ocultar preview
     } else {
       mostrarMensaje(`❌ Error: ${mensaje}`, true);
     }
@@ -410,3 +418,4 @@ Object.assign(window, {
   registrarEtiquetas,
   obtenerHistorialEtiquetas
 });
+
