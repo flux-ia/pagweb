@@ -38,7 +38,7 @@ async function compressFileToBase64(file, maxW = 1200, quality = 0.7) {
 // Wrapper de fetch con timeout, reintentos y log de errores
 async function fetchJSONWithRetry(url, options, {
   tries = 3,
-  timeoutMs = 45000 // Aumentado a 45 segundos como parche temporal
+  timeoutMs = 60000 // Aumentado a 45 segundos como parche temporal
 } = {}) {
 
   // URL del webhook espía (con el nuevo dominio)
@@ -421,3 +421,4 @@ Object.assign(window, {
   registrarEtiquetas,
   obtenerHistorialEtiquetas
 });
+
