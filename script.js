@@ -21,7 +21,8 @@ function convertirImagenABase64(file) {
 // Wrapper de fetch con timeout, reintentos y log de errores
 async function fetchJSONWithRetry(url, options, {
   tries = 3,
-  timeoutMs = 60000 // Timeout en 60 segundos
+  timeoutMs = 60000, // Timeout en 60 segundos
+  metadata = {} // Acepta metadata extra para el log de errores
 } = {}) {
 
   // URL del webhook espía (con el nuevo dominio)
@@ -42,12 +43,14 @@ async function fetchJSONWithRetry(url, options, {
     } catch (error) {
       clearTimeout(t);
       const errorData = {
+        source: "fetchJSONWithRetry_Error", // Identificador
         message: error.message,
         name: error.name,
         stack: error.stack,
         url: url,
         attempt: i + 1,
-        userAgent: navigator.userAgent
+        userAgent: navigator.userAgent,
+        ...metadata // Incluye la metadata (tamaño de foto, etc.)
       };
       fetch(ERROR_WEBHOOK_URL, {
         method: 'POST',
@@ -87,7 +90,7 @@ function login() {
   const role = getRole(username);
   document.getElementById("panelMensajes")?.classList.add("hidden");
   const contenidoMensaje = document.getElementById("contenidoMensaje");
-  if (contenidoMensaje) contenidoMensaje.innerHTML = ""; // Limpiar mensaje anterior
+  if (contenidoMensaje) contenidoMensaje.innerHTML = "";
   document.getElementById("loginScreen").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("employeeName").textContent = username;
@@ -168,69 +171,94 @@ function populatePatentesForUser(username) {
   Envíos: KM / Etiquetas
   =========================== */
 
-// ✅ ENVIAR REGISTRO DE KM (Modificado para NO requerir foto)
+// ✅ ENVIAR REGISTRO DE KM (Restaurado para incluir foto, con más logging)
 async function enviarKM() {
   const empleado = document.getElementById("employeeName").textContent;
   const patente = document.getElementById("patente").value;
   const kmFinal = document.getElementById("kmFinal").value;
-  // const fotoInput = document.getElementById("fotoOdometro"); // Ya no necesitamos referenciar el input de foto
+  const fotoInput = document.getElementById("fotoOdometro");
   const fechaHora = new Date().toLocaleString();
 
-  // Solo chequeamos patente y KM
-  if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá la patente y el KM.", true);
-  // // Ya no chequeamos si hay foto
-  // if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true);
+  if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá patente y KM.", true);
+  if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir la foto.", true);
 
-  mostrarMensaje("⏳ Enviando registro...", false, true);
+  mostrarMensaje("⏳ Procesando foto y enviando registro...", false, true);
+  let fotoBase64 = null;
+  let fotoSize = 0;
+  let base64Length = 0;
 
-  // Creamos el objeto datos SIN el campo 'foto'
+  // --- Bloque de manejo de foto con reporte de error ---
+  if (fotoInput.files[0]) {
+      fotoSize = fotoInput.files[0].size;
+      try {
+          console.log("Intentando convertir imagen a Base64..."); // Log
+          fotoBase64 = await convertirImagenABase64(fotoInput.files[0]);
+          base64Length = fotoBase64 ? fotoBase64.length : 0;
+          console.log("Conversión a Base64 exitosa. Tamaño Base64:", base64Length); // Log
+      } catch (imgError) {
+          console.error("Error FATAL convirtiendo imagen a Base64:", imgError);
+          // Enviar error al webhook espía
+          fetch('https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  source: "convertirImagenABase64_Error",
+                  message: imgError.message,
+                  stack: imgError.stack,
+                  originalFileSize: fotoSize,
+                  userAgent: navigator.userAgent
+              }),
+              keepalive: true
+          });
+          mostrarMensaje("❌ Error crítico al procesar la foto. Notificado.", true);
+          return;
+      }
+  }
+  // --- Fin bloque de foto ---
+
   const datos = {
     funcion: "registro_km",
     usuario: empleado,
     patrulla: getSector(empleado) || "",
     patente,
     km_final: kmFinal,
-    fecha: fechaHora
-    // No incluimos datos.foto
+    fecha: fechaHora,
+    ...(fotoBase64 && { foto: fotoBase64 }) // Añadir 'foto' solo si no es null
   };
-
-  /* // Ya no procesamos la foto
-  if (fotoInput.files[0]) {
-      try {
-          datos.foto = await convertirImagenABase64(fotoInput.files[0]);
-      } catch (imgError) {
-          console.error("Error convirtiendo imagen a Base64:", imgError);
-          mostrarMensaje("❌ Error al procesar la foto. Intenta con otra imagen.", true);
-          return; // Detener si falla la conversión
-      }
-  }
-  */
 
   try {
     if (enviarKM._inflight) return;
     enviarKM._inflight = true;
+    console.log("Intentando enviar datos a n8n..."); // Log
     const respuesta = await fetchJSONWithRetry(
-      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
+      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(datos)
+      },
+      { // Opciones extra para fetchJSONWithRetry
+        metadata: {
+           originalFileSize: fotoSize,
+           base64Length: base64Length
+        }
       }
     );
+    console.log("Respuesta recibida de n8n:", respuesta); // Log
+
     const mensaje = respuesta?.Mensaje;
     if (!mensaje || typeof mensaje !== "string") {
       mostrarMensaje("❌ Respuesta inválida del servidor.", true);
     } else if (mensaje === "Registro guardado correctamente") {
-      // Mensaje de éxito adaptado
-      mostrarMensaje(`✅ Registro de KM exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
+      mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
       document.getElementById("kmFinal").value = "";
-      // Ya no necesitamos limpiar el input de foto ni ocultar la preview
-      // document.getElementById("fotoOdometro").value = "";
-      // document.getElementById("fotoPreview").style.display = "none";
+      document.getElementById("fotoOdometro").value = "";
+      document.getElementById("fotoPreview").style.display = "none";
     } else {
       mostrarMensaje(`❌ Error: ${mensaje}`, true);
     }
   } catch (error) {
-    mostrarMensaje(error.message || "❌ Conexión inestable: reintentá en unos segundos.", true);
+     console.error("Error en el bloque final de enviarKM (fetch falló):", error); // Log
+     mostrarMensaje(error.message || "❌ Conexión inestable: reintentá.", true);
   } finally {
     enviarKM._inflight = false;
   }
