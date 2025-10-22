@@ -38,11 +38,10 @@ async function compressFileToBase64(file, maxW = 1200, quality = 0.7) {
 // Wrapper de fetch con timeout, reintentos y log de errores
 async function fetchJSONWithRetry(url, options, {
   tries = 3,
-  timeoutMs = 45000
+  timeoutMs = 45000 // Aumentado a 45 segundos como parche temporal
 } = {}) {
 
-  // URL de tu workflow que solo recibe errores
-  // ✅ CORRECCIÓN FINAL: URL del webhook ESPÍA correcta.
+  // URL del webhook espía (con el nuevo dominio)
   const ERROR_WEBHOOK_URL = 'https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14';
 
   let wait = 800;
@@ -106,7 +105,8 @@ function login() {
   if (usuarios[username] !== pass) return mostrarMensaje("🔑 Contraseña incorrecta.", true);
   const role = getRole(username);
   document.getElementById("panelMensajes")?.classList.add("hidden");
-  document.getElementById("contenidoMensaje").innerHTML = ""; // Limpiar mensaje anterior
+  const contenidoMensaje = document.getElementById("contenidoMensaje");
+  if (contenidoMensaje) contenidoMensaje.innerHTML = ""; // Limpiar mensaje anterior
   document.getElementById("loginScreen").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("employeeName").textContent = username;
@@ -141,12 +141,12 @@ function showCargaEtiquetas() {
 }
 
 function volver() {
-  document.getElementById("kmForm").classList.add("hidden");
-  document.getElementById("etiquetaForm").classList.add("hidden");
-  document.getElementById("registroEtiquetasForm").classList.add("hidden");
-  document.getElementById("panelMisEtiquetas").classList.add("hidden");
-  document.getElementById("panelMensajes").classList.add("hidden");
-  document.getElementById("dashboard").classList.remove("hidden");
+  document.getElementById("kmForm")?.classList.add("hidden");
+  document.getElementById("etiquetaForm")?.classList.add("hidden");
+  document.getElementById("registroEtiquetasForm")?.classList.add("hidden");
+  document.getElementById("panelMisEtiquetas")?.classList.add("hidden");
+  document.getElementById("panelMensajes")?.classList.add("hidden");
+  document.getElementById("dashboard")?.classList.remove("hidden");
 }
 
 function ocultarTodosLosFormularios() {
@@ -286,7 +286,7 @@ async function registrarEtiquetas() {
     etiquetas.push(`ETQ-${String(i).padStart(3, "0")}`);
   }
   const datos = { funcion: "registro_etiquetas_admin", usuario: empleado, patrulla: getSector(empleado) || "", fecha: fechaHora, etiquetas };
-  
+
   mostrarMensaje("⏳ Registrando nuevas etiquetas...");
 
   try {
@@ -318,16 +318,15 @@ async function registrarEtiquetas() {
 function mostrarMensaje(mensaje, esError = false, esLoader = false) {
   const panel = document.getElementById("panelMensajes");
   const contenido = document.getElementById("contenidoMensaje");
-  
-  // Añadir chequeo por si los elementos no existen
+
   if (!panel || !contenido) {
       console.error("Error: No se encuentran los elementos 'panelMensajes' o 'contenidoMensaje' en el HTML.");
-      return; 
+      return;
   }
 
   contenido.innerHTML = esLoader ? `<div class="loader"></div><br>${mensaje}` : mensaje;
   contenido.style.color = esError ? "red" : "black";
-  
+
   ocultarTodosLosFormularios(); // Oculta otros formularios
   panel.classList.remove("hidden"); // Muestra el panel de mensajes
 }
@@ -365,16 +364,15 @@ async function obtenerHistorialEtiquetas() {
     const panelHistorial = document.getElementById("panelMisEtiquetas");
     const contenidoDiv = document.getElementById("contenidoHistorial");
 
-    // Añadir chequeo por si los elementos no existen
     if (!panelHistorial || !contenidoDiv) {
         console.error("Error: No se encuentran los elementos 'panelMisEtiquetas' o 'contenidoHistorial' en el HTML.");
-        mostrarMensaje("❌ Error al mostrar el historial.", true); // Mostrar error al usuario
+        mostrarMensaje("❌ Error al mostrar el historial.", true);
         return;
     }
 
     contenidoDiv.innerHTML = contenidoHistorial;
-    document.getElementById("panelMensajes")?.classList.add("hidden"); // Ocultar panel de mensajes normal
-    panelHistorial.classList.remove("hidden"); // Mostrar panel de historial
+    document.getElementById("panelMensajes")?.classList.add("hidden");
+    panelHistorial.classList.remove("hidden");
   } catch (error) {
     mostrarMensaje("❌ Error al consultar el historial.", true);
   }
@@ -396,7 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
           i.addEventListener("keypress", (e) => e.key === "Enter" && login())
       );
   }
-  
+
   const fotoInput = document.getElementById("fotoOdometro");
   if (fotoInput) {
     fotoInput.addEventListener("change", (e) => {
@@ -411,6 +409,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// ✅ CORRECCIÓN FINAL: Bloque para exportar funciones al ámbito global.
 Object.assign(window, {
   login,
   showKmForm,
@@ -422,23 +421,3 @@ Object.assign(window, {
   registrarEtiquetas,
   obtenerHistorialEtiquetas
 });
-```Sí, **el código ahora está correcto** con todas las URLs actualizadas. 👍
-
-## Causas Probables del Bloqueo en el Login
-
-Aunque el código de las URLs ya está bien, si todavía te quedas "pegado" en el login, el problema tiene que estar en la interacción entre el JavaScript y tu HTML. Las causas más comunes son:
-
-1.  **IDs Incorrectos en el HTML:** Es la causa más frecuente. Verifica que los `div` o `section` en tu archivo HTML tengan **exactamente** los IDs `loginScreen` y `dashboard`. Un error de tipeo (ej., `loginScren` en lugar de `loginScreen`) haría que el JavaScript no encuentre el elemento y no pueda ocultar/mostrar nada. Revisa mayúsculas y minúsculas también.
-2.  **Otro Error de JavaScript:** Aunque las URLs estén bien, podría haber otro error de JavaScript (quizás introducido accidentalmente) que detiene la ejecución del código *después* de validar el usuario pero *antes* de mostrar el dashboard.
-
-## Cómo Diagnosticar Definitivamente
-
-Para saber con certeza qué está pasando, necesitamos ver la **Consola del Navegador** en el momento en que intentas iniciar sesión y te quedas pegado.
-
-1.  Abre tu página web en Chrome en tu computadora.
-2.  Presiona **F12** para abrir las Herramientas de Desarrollador.
-3.  Ve a la pestaña **"Consola" (Console)**.
-4.  Intenta iniciar sesión.
-5.  **Si hay algún error** de JavaScript (como "Cannot read property 'classList' of null" o similar), aparecerá en **rojo** en la consola. Ese mensaje nos dirá exactamente qué está fallando.
-
-Pega aquí cualquier mensaje de error en rojo que veas en la consola al intentar iniciar sesión.
