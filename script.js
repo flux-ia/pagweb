@@ -168,17 +168,22 @@ function populatePatentesForUser(username) {
   Envíos: KM / Etiquetas
   =========================== */
 
+// ✅ ENVIAR REGISTRO DE KM (Modificado para NO requerir foto)
 async function enviarKM() {
   const empleado = document.getElementById("employeeName").textContent;
   const patente = document.getElementById("patente").value;
   const kmFinal = document.getElementById("kmFinal").value;
-  /const fotoInput = document.getElementById("fotoOdometro");
+  // const fotoInput = document.getElementById("fotoOdometro"); // Ya no necesitamos referenciar el input de foto
   const fechaHora = new Date().toLocaleString();
 
-  if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá todos los campos para registrar KM.", true);
- / if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true); // Volvimos a requerir foto
+  // Solo chequeamos patente y KM
+  if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá la patente y el KM.", true);
+  // // Ya no chequeamos si hay foto
+  // if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true);
 
   mostrarMensaje("⏳ Enviando registro...", false, true);
+
+  // Creamos el objeto datos SIN el campo 'foto'
   const datos = {
     funcion: "registro_km",
     usuario: empleado,
@@ -189,8 +194,8 @@ async function enviarKM() {
     // No incluimos datos.foto
   };
 
-  // Volvimos a usar convertirImagenABase64 (sin compresión extra)
-  /*if (fotoInput.files[0]) {
+  /* // Ya no procesamos la foto
+  if (fotoInput.files[0]) {
       try {
           datos.foto = await convertirImagenABase64(fotoInput.files[0]);
       } catch (imgError) {
@@ -198,7 +203,8 @@ async function enviarKM() {
           mostrarMensaje("❌ Error al procesar la foto. Intenta con otra imagen.", true);
           return; // Detener si falla la conversión
       }
-  }*/
+  }
+  */
 
   try {
     if (enviarKM._inflight) return;
@@ -214,20 +220,22 @@ async function enviarKM() {
     if (!mensaje || typeof mensaje !== "string") {
       mostrarMensaje("❌ Respuesta inválida del servidor.", true);
     } else if (mensaje === "Registro guardado correctamente") {
-      mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
+      // Mensaje de éxito adaptado
+      mostrarMensaje(`✅ Registro de KM exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
       document.getElementById("kmFinal").value = "";
-      /document.getElementById("fotoOdometro").value = ""; // Limpiar input de foto
-      /document.getElementById("fotoPreview").style.display = "none"; // Ocultar preview
+      // Ya no necesitamos limpiar el input de foto ni ocultar la preview
+      // document.getElementById("fotoOdometro").value = "";
+      // document.getElementById("fotoPreview").style.display = "none";
     } else {
       mostrarMensaje(`❌ Error: ${mensaje}`, true);
     }
   } catch (error) {
-    // Si fetchJSONWithRetry falla, mostrará el error específico o el genérico
     mostrarMensaje(error.message || "❌ Conexión inestable: reintentá en unos segundos.", true);
   } finally {
     enviarKM._inflight = false;
   }
 }
+
 
 async function enviarEtiqueta() {
   const empleado = document.getElementById("employeeName").textContent;
@@ -331,9 +339,6 @@ function mostrarMensaje(mensaje, esError = false, esLoader = false) {
   panel.classList.remove("hidden"); // Muestra el panel de mensajes
 }
 
-// Ya está definida arriba, no se necesita aquí de nuevo
-// function convertirImagenABase64(file) { ... }
-
 /* ===========================
   Historial de etiquetas
   =========================== */
@@ -383,7 +388,6 @@ function formatearHistorial(mensajeN8N) {
 document.addEventListener("DOMContentLoaded", () => {
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
-  // Chequeo más robusto por si los elementos no existen
   if (usernameInput && passwordInput) {
       [usernameInput, passwordInput].forEach(i =>
           i.addEventListener("keypress", (e) => e.key === "Enter" && login())
@@ -418,4 +422,3 @@ Object.assign(window, {
   registrarEtiquetas,
   obtenerHistorialEtiquetas
 });
-
