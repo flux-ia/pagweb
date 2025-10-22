@@ -8,37 +8,20 @@ function isCellular() {
   return !!(c && (c.type === 'cellular' || (c.effectiveType && /2g|3g|slow-2g/.test(c.effectiveType))));
 }
 
-// Comprimir imagen ANTES de pasarla a base64
-async function compressFileToBase64(file, maxW = 1200, quality = 0.7) {
-  if (!file.type || !file.type.startsWith('image/')) {
-    return convertirImagenABase64(file);
-  }
-  const img = await new Promise((res, rej) => {
-    const o = new Image();
-    o.onload = () => res(o);
-    o.onerror = rej;
-    o.src = URL.createObjectURL(file);
+// SIMPLIFICADO: Solo convierte a Base64, sin compresión/redimensión
+function convertirImagenABase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]); // Devuelve solo la parte Base64
+    reader.onerror = (error) => reject(new Error("Error al procesar la foto: " + error));
+    reader.readAsDataURL(file);
   });
-  const origW = img.naturalWidth || img.width || maxW;
-  const origH = img.naturalHeight || img.height || maxW;
-  const scale = Math.min(1, maxW / origW);
-  if (scale >= 1) return convertirImagenABase64(file);
-
-  const w = Math.round(origW * scale);
-  const h = Math.round(origH * scale);
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0, w, h);
-  const dataUrl = canvas.toDataURL('image/jpeg', quality);
-  return dataUrl.split(',')[1];
 }
 
 // Wrapper de fetch con timeout, reintentos y log de errores
 async function fetchJSONWithRetry(url, options, {
   tries = 3,
-  timeoutMs = 45000 // Aumentado a 45 segundos como parche temporal
+  timeoutMs = 60000 // Timeout en 60 segundos
 } = {}) {
 
   // URL del webhook espía (con el nuevo dominio)
@@ -50,7 +33,6 @@ async function fetchJSONWithRetry(url, options, {
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
 
     try {
-      // Intenta la petición normal a tu webhook principal
       const res = await fetch(url, { ...options, signal: ctrl.signal, cache: 'no-store', keepalive: true });
       clearTimeout(t);
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -67,7 +49,6 @@ async function fetchJSONWithRetry(url, options, {
         attempt: i + 1,
         userAgent: navigator.userAgent
       };
-      // Envía el detalle del error a tu webhook espía
       fetch(ERROR_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -187,20 +168,44 @@ function populatePatentesForUser(username) {
   Envíos: KM / Etiquetas
   =========================== */
 
+// ✅ ENVIAR REGISTRO DE KM (Modificado para NO requerir foto)
 async function enviarKM() {
   const empleado = document.getElementById("employeeName").textContent;
   const patente = document.getElementById("patente").value;
   const kmFinal = document.getElementById("kmFinal").value;
-  const fotoInput = document.getElementById("fotoOdometro");
+  // const fotoInput = document.getElementById("fotoOdometro"); // Ya no necesitamos referenciar el input de foto
   const fechaHora = new Date().toLocaleString();
-  if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá todos los campos para registrar KM.", true);
-  if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true);
+
+  // Solo chequeamos patente y KM
+  if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá la patente y el KM.", true);
+  // // Ya no chequeamos si hay foto
+  // if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir una foto del tablero para registrar los KM.", true);
 
   mostrarMensaje("⏳ Enviando registro...", false, true);
-  const datos = { funcion: "registro_km", usuario: empleado, patrulla: getSector(empleado) || "", patente, km_final: kmFinal, fecha: fechaHora };
+
+  // Creamos el objeto datos SIN el campo 'foto'
+  const datos = {
+    funcion: "registro_km",
+    usuario: empleado,
+    patrulla: getSector(empleado) || "",
+    patente,
+    km_final: kmFinal,
+    fecha: fechaHora
+    // No incluimos datos.foto
+  };
+
+  /* // Ya no procesamos la foto
   if (fotoInput.files[0]) {
-    datos.foto = await compressFileToBase64(fotoInput.files[0]);
+      try {
+          datos.foto = await convertirImagenABase64(fotoInput.files[0]);
+      } catch (imgError) {
+          console.error("Error convirtiendo imagen a Base64:", imgError);
+          mostrarMensaje("❌ Error al procesar la foto. Intenta con otra imagen.", true);
+          return; // Detener si falla la conversión
+      }
   }
+  */
+
   try {
     if (enviarKM._inflight) return;
     enviarKM._inflight = true;
@@ -215,19 +220,22 @@ async function enviarKM() {
     if (!mensaje || typeof mensaje !== "string") {
       mostrarMensaje("❌ Respuesta inválida del servidor.", true);
     } else if (mensaje === "Registro guardado correctamente") {
-      mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
+      // Mensaje de éxito adaptado
+      mostrarMensaje(`✅ Registro de KM exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
       document.getElementById("kmFinal").value = "";
-      document.getElementById("fotoOdometro").value = "";
-      document.getElementById("fotoPreview").style.display = "none";
+      // Ya no necesitamos limpiar el input de foto ni ocultar la preview
+      // document.getElementById("fotoOdometro").value = "";
+      // document.getElementById("fotoPreview").style.display = "none";
     } else {
       mostrarMensaje(`❌ Error: ${mensaje}`, true);
     }
   } catch (error) {
-    mostrarMensaje("❌ Conexión inestable: reintentá en unos segundos.", true);
+    mostrarMensaje(error.message || "❌ Conexión inestable: reintentá en unos segundos.", true);
   } finally {
     enviarKM._inflight = false;
   }
 }
+
 
 async function enviarEtiqueta() {
   const empleado = document.getElementById("employeeName").textContent;
@@ -331,15 +339,6 @@ function mostrarMensaje(mensaje, esError = false, esLoader = false) {
   panel.classList.remove("hidden"); // Muestra el panel de mensajes
 }
 
-function convertirImagenABase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = () => reject(new Error("Error al procesar la foto"));
-    reader.readAsDataURL(file);
-  });
-}
-
 /* ===========================
   Historial de etiquetas
   =========================== */
@@ -393,6 +392,8 @@ document.addEventListener("DOMContentLoaded", () => {
       [usernameInput, passwordInput].forEach(i =>
           i.addEventListener("keypress", (e) => e.key === "Enter" && login())
       );
+  } else {
+      console.error("Error: No se encuentran los inputs de username o password.");
   }
 
   const fotoInput = document.getElementById("fotoOdometro");
@@ -409,7 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ CORRECCIÓN FINAL: Bloque para exportar funciones al ámbito global.
+// ✅ Bloque final para exportar funciones al ámbito global.
 Object.assign(window, {
   login,
   showKmForm,
