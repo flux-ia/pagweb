@@ -8,24 +8,63 @@ function isCellular() {
   return !!(c && (c.type === 'cellular' || (c.effectiveType && /2g|3g|slow-2g/.test(c.effectiveType))));
 }
 
-// Convierte imagen a Base64
-function convertirImagenABase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]); // Solo Base64
-    reader.onerror = (error) => reject(new Error("Error al procesar la foto: " + error.message)); // Mensaje más claro
-    reader.readAsDataURL(file);
+/**
+ * Convierte/normaliza una imagen a JPEG comprimido y retorna Base64 (sin prefijo data:)
+ * - Redimensiona a maxDim (manteniendo relación de aspecto)
+ * - Fuerza JPEG (evita HEIC pesados)
+ * - Ajusta calidad en función de la red (celular vs wifi)
+ * Devuelve: { base64, approxBytes }
+ */
+async function convertirImagenABase64(file, {
+  maxDim = 1200,
+  qualityWifi = 0.75,
+  qualityCell = 0.6
+} = {}) {
+  const isCell = isCellular();
+  const quality = isCell ? qualityCell : qualityWifi;
+
+  // Carga la imagen como ImageBitmap (rápido y eficiente)
+  const imgBitmap = await createImageBitmap(file);
+
+  // Calcula tamaño destino manteniendo aspecto
+  let { width, height } = imgBitmap;
+  if (width > height && width > maxDim) {
+    height = Math.round(height * (maxDim / width));
+    width = maxDim;
+  } else if (height >= width && height > maxDim) {
+    width = Math.round(width * (maxDim / height));
+    height = maxDim;
+  }
+
+  // Dibuja en canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(imgBitmap, 0, 0, width, height);
+
+  // Convierte a JPEG comprimido
+  const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', quality));
+  if (!blob) throw new Error('No se pudo convertir la imagen a JPEG.');
+
+  // Pasa a Base64 (sin el prefijo data:)
+  const base64 = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1]);
+    r.onerror = () => reject(new Error('Error leyendo blob comprimido'));
+    r.readAsDataURL(blob);
   });
+
+  return { base64, approxBytes: blob.size };
 }
 
-// Wrapper de fetch con timeout, reintentos y log de errores
+// Wrapper de fetch con timeout, reintentos y log de errores (sin keepalive)
 async function fetchJSONWithRetry(url, options, {
   tries = 3,
-  timeoutMs = 60000, // Timeout 60 segundos
+  timeoutMs = 60000, // 60s
   metadata = {}
 } = {}) {
-
-  const ERROR_WEBHOOK_URL = 'https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14'; // URL Espía
+  const ERROR_WEBHOOK_URL = 'https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14';
   let wait = 800;
 
   for (let i = 0; i < tries; i++) {
@@ -33,28 +72,34 @@ async function fetchJSONWithRetry(url, options, {
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
 
     try {
-      const res = await fetch(url, { ...options, signal: ctrl.signal, cache: 'no-store', keepalive: true });
+      const res = await fetch(url, { ...options, signal: ctrl.signal, cache: 'no-store' });
       clearTimeout(t);
-      if (!res.ok) throw new Error('HTTP ' + res.status); // Lanza error si la respuesta no es OK (ej: 500)
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
       try { return text ? JSON.parse(text) : {}; } catch { return { raw: text }; }
-
     } catch (error) {
       clearTimeout(t);
-      // Prepara datos del error, incluyendo metadata
-      const errorData = {
-        source: "fetchJSONWithRetry_Error", message: error.message, name: error.name, stack: error.stack,
-        url: url, attempt: i + 1, userAgent: navigator.userAgent, ...metadata
-      };
-      // Envía error al webhook espía
-      fetch(ERROR_WEBHOOK_URL, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(errorData), keepalive: true
-      }).catch(logErr => console.error("Error enviando log:", logErr)); // Log si falla el envío del log
 
-      if (i === tries - 1) { // Si es el último intento, lanza el error para que lo vea el usuario
-          console.error(`Fetch falló después de ${tries} intentos:`, error);
-          throw error;
+      // Log del error al webhook espía (sin keepalive)
+      const errorData = {
+        source: "fetchJSONWithRetry_Error",
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        url,
+        attempt: i + 1,
+        userAgent: navigator.userAgent,
+        ...metadata
+      };
+      fetch(ERROR_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(errorData)
+      }).catch(() => { /* silencioso */ });
+
+      if (i === tries - 1) {
+        console.error(`Fetch falló después de ${tries} intentos:`, error);
+        throw error;
       }
       await new Promise(s => setTimeout(s, wait));
       wait = Math.min(wait * 2, 4000);
@@ -65,12 +110,36 @@ async function fetchJSONWithRetry(url, options, {
 /* ===========================
   Datos de usuarios / sectores
   =========================== */
+
 const usuarios = { gaston: "gaston1", adm: "adm1", admin_laplata: "adminlp1", admin_cordoba: "admincba1", admin_rioiv: "adminrio1", admin_bahiablanca: "adminbb1", admin_sanluis: "adminsl1", admin_salta: "adminsa1", admin_tucuman: "admintuc1", behm: "behm123", bocchetto: "boc123", bucala: "bucala123", chiner: "chiner123", estebaneugenia: "estebaneugenia1", estebanluciana: "estebanluciana", fernandezgaston: "fernandezgaston1", fernandezjuan: "fernandezjuan1", laubert: "laubert123", machaca: "machaca123", vaghioscar: "vaghioscar123", vaghipablo: "vaghipablo123", vaghiroque: "vaghiroque456", aguirrez: "aguirrez1", alarcon: "alarcon1", alejo: "alejo1", aranda: "aranda1", barraza: "barraza1", batistini: "batistini1", beltran: "beltran123", caceres: "caceres123", calderon: "calderon1", cancino: "cancino123", cañette: "cañette123", ceballos: "ceballos1", cimino: "cimino123", cruz: "cruz123", diazluis: "diazluis1", diazmanuel: "diazmanuel1", figueroa: "figueroa1", galeassialexis: "galeassialexis1", galeassieric: "galeassieric1", gallegos: "gallegos123", griecco: "griecco123", gutierrez: "gutierrez123", iglesiaspedro: "iglesiaspedro", iglesiashugo: "iglesiashugo", kunz: "kunz123", lagos: "lagos123", madariaga: "madariaga123", mas: "mas123", medinaalvaro: "medinaalvaro", medinaenzo: "medinaenzo", navarro: "navarro123", nieva: "nieva123", olleta: "olleta123", ortizalejandro: "ortiz123", ortizoscar: "ortiz456", paz: "paz123", presentado: "presentado123", quintaye: "quintaye123", quiroga: "quiroga123", rios: "rios123", ruiz: "ruiz123", sanchez: "sanchez123", sartori: "sartori123", serrano: "serrano123", tejedaadrian: "tejedaadrian", tejedaaldo: "tejedaaldo", trovato: "trovato123", vaghiroque: "vaghi", zelaya: "zelaya" };
+
 const userRole = { adm: "SUPERADMIN", admin_laplata: "ADMIN", admin_cordoba: "ADMIN", admin_rioiv: "ADMIN", admin_bahiablanca: "ADMIN", admin_sanluis: "ADMIN", admin_salta: "ADMIN", admin_tucuman: "ADMIN" };
 const getRole = (u) => userRole[u] || "TECNICO";
+
+const userSector = {
+  admin_laplata: "LA PLATA", admin_cordoba: "CÓRDOBA", admin_rioiv: "RÍO IV", admin_bahiablanca: "BAHÍA BLANCA",
+  admin_sanluis: "SAN LUIS", admin_salta: "SALTA", admin_tucuman: "TUCUMÁN", vaghiroque: "TUCUMÁN",
+  aguirrez: "LA PLATA", alejo: "LA PLATA", mas: "LA PLATA", ortizalejandro: "LA PLATA", ortizoscar: "LA PLATA", sartori: "LA PLATA",
+  alarcon: "TUCUMÁN", beltran: "TUCUMÁN", cruz: "TUCUMÁN", gutierrez: "TUCUMÁN", medinaalvaro: "TUCUMÁN", navarro: "TUCUMÁN",
+  nieva: "TUCUMÁN", olleta: "TUCUMÁN", paz: "TUCUMÁN", ruiz: "TUCUMÁN", serrano: "TUCUMÁN", zelaya: "TUCUMÁN",
+  aranda: "CÓRDOBA", barraza: "CÓRDOBA", caceres: "CÓRDOBA", calderon: "CÓRDOBA", cañette: "CÓRDOBA",
+  galeassialexis: "CÓRDOBA", galeassieric: "CÓRDOBA", gallegos: "CÓRDOBA", griecco: "CÓRDOBA", iglesiaspedro: "CÓRDOBA",
+  iglesiashugo: "CÓRDOBA", presentado: "CÓRDOBA", quiroga: "CÓRDOBA", rios: "CÓRDOBA", sanchez: "CÓRDOBA", tejedaadrian: "CÓRDOBA",
+  batistini: "RÍO IV", ceballos: "RÍO IV", figueroa: "RÍO IV", kunz: "kunz123", lagos: "lagos123",
+  quintaye: "BAHÍA BLANCA", trovato: "BAHÍA BLANCA", cancino: "SAN LUIS", cimino: "SALTA", diazluis: "SALTA", diazmanuel: "SALTA",
+  madariaga: "SALTA", medinaenzo: "TUCUMÁN"
+};
 const getSector = (u) => userSector[u] || null;
-const userSector = { admin_laplata: "LA PLATA", admin_cordoba: "CÓRDOBA", admin_rioiv: "RÍO IV", admin_bahiablanca: "BAHÍA BLANCA", admin_sanluis: "SAN LUIS", admin_salta: "SALTA", admin_tucuman: "TUCUMÁN", vaghiroque: "TUCUMÁN", aguirrez: "LA PLATA", alejo: "LA PLATA", mas: "LA PLATA", ortizalejandro: "LA PLATA", ortizoscar: "LA PLATA", sartori: "LA PLATA", alarcon: "TUCUMÁN", beltran: "TUCUMÁN", cruz: "TUCUMÁN", gutierrez: "TUCUMÁN", medinaalvaro: "TUCUMÁN", navarro: "TUCUMÁN", nieva: "TUCUMÁN", olleta: "TUCUMÁN", paz: "TUCUMÁN", ruiz: "TUCUMÁN", serrano: "TUCUMÁN", zelaya: "TUCUMÁN", aranda: "CÓRDOBA", barraza: "CÓRDOBA", caceres: "CÓRDOBA", calderon: "CÓRDOBA", cañette: "CÓRDOBA", galeassialexis: "CÓRDOBA", galeassieric: "CÓRDOBA", gallegos: "CÓRDOBA", griecco: "CÓRDOBA", iglesiaspedro: "CÓRDOBA", iglesiashugo: "CÓRDOBA", presentado: "CÓRDOBA", quiroga: "CÓRDOBA", rios: "CÓRDOBA", sanchez: "CÓRDOBA", tejedaadrian: "CÓRDOBA", batistini: "RÍO IV", ceballos: "RÍO IV", figueroa: "RÍO IV", kunz: "kunz123", lagos: "lagos123", quintaye: "BAHÍA BLANCA", trovato: "BAHÍA BLANCA", cancino: "SAN LUIS", cimino: "SALTA", diazluis: "SALTA", diazmanuel: "SALTA", madariaga: "SALTA", medinaenzo: "TUCUMÁN" };
-const sectorPatentes = { "LA PLATA": ["AA317PM", "AA420JU", "AH280OQ", "AH571SO", "NEO135", "PDY875", "PKZ249"], "TUCUMÁN": ["AB403NQ", "AC079TW", "AD964TK", "AE017FB", "AH335IM", "NWX351", "PQE699"], "CÓRDOBA": ["AA980XO", "AB861HC", "AC111MD", "AD964TJ", "AE327LO", "AE464FY", "AE683IX", "AE727HQ", "AF766ZB", "AG883IG", "AH335FM", "ITJ845", "IUY548", "IVZ434", "NEO134", "OPC046", "OXJ953"], "RÍO IV": ["AB794YT", "AG727MO"], "BAHÍA BLANCA": ["AA925PQ", "OIC618"], "SAN LUIS": ["AE287YW"], "SALTA": ["AH017QS", "KDG674", "OUM376"] };
+
+const sectorPatentes = {
+  "LA PLATA": ["AA317PM", "AA420JU", "AH280OQ", "AH571SO", "NEO135", "PDY875", "PKZ249"],
+  "TUCUMÁN": ["AB403NQ", "AC079TW", "AD964TK", "AE017FB", "AH335IM", "NWX351", "PQE699"],
+  "CÓRDOBA": ["AA980XO", "AB861HC", "AC111MD", "AD964TJ", "AE327LO", "AE464FY", "AE683IX", "AE727HQ", "AF766ZB", "AG883IG", "AH335FM", "ITJ845", "IUY548", "IVZ434", "NEO134", "OPC046", "OXJ953"],
+  "RÍO IV": ["AB794YT", "AG727MO"],
+  "BAHÍA BLANCA": ["AA925PQ", "OIC618"],
+  "SAN LUIS": ["AE287YW"],
+  "SALTA": ["AH017QS", "KDG674", "OUM376"]
+};
 const TODAS_LAS_PATENTES = Array.from(new Set(Object.values(sectorPatentes).flat()));
 
 /* ===========================
@@ -83,6 +152,7 @@ function login() {
   if (!username || !pass) return mostrarMensaje("❗ Por favor completá ambos campos.", true);
   if (!(username in usuarios)) return mostrarMensaje("🚫 Usuario no registrado.", true);
   if (usuarios[username] !== pass) return mostrarMensaje("🔑 Contraseña incorrecta.", true);
+
   const role = getRole(username);
   document.getElementById("panelMensajes")?.classList.add("hidden");
   const contenidoMensaje = document.getElementById("contenidoMensaje");
@@ -167,9 +237,12 @@ function populatePatentesForUser(username) {
   Envíos: KM / Etiquetas
   =========================== */
 
-// ✅ ENVIAR REGISTRO DE KM (Foto requerida, con logging y captura de errores)
+// Límite de seguridad de tamaño de la foto en Base64 (caracteres)
+const MAX_BASE64_CHARS = 2_500_000; // ≈ ~1.9–2.0 MB binarios
+
+// ✅ ENVIAR REGISTRO DE KM (foto requerida, comprimida, sin keepalive)
 async function enviarKM() {
-  let empleado, patente, kmFinal, fotoInput, fechaHora, fotoSize = 0, base64Length = 0, fotoBase64 = null;
+  let empleado, patente, kmFinal, fotoInput, fechaHora;
 
   try {
     empleado = document.getElementById("employeeName").textContent;
@@ -180,60 +253,68 @@ async function enviarKM() {
 
     if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá patente y KM.", true);
     if (!fotoInput || !fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir la foto.", true);
-
   } catch (initError) {
-      console.error("Error inicial obteniendo datos:", initError);
-      mostrarMensaje("❌ Error inesperado al preparar datos.", true);
-      fetch('https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ source: "enviarKM_InitError", message: initError.message, stack: initError.stack, userAgent: navigator.userAgent }),
-          keepalive: true }).catch(logErr => console.error("Error enviando log:", logErr));
-      return;
+    console.error("Error inicial obteniendo datos:", initError);
+    mostrarMensaje("❌ Error inesperado al preparar datos.", true);
+    // Log espía sin keepalive
+    fetch('https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: "enviarKM_InitError", message: initError.message, stack: initError.stack, userAgent: navigator.userAgent })
+    }).catch(() => {});
+    return;
   }
 
   mostrarMensaje("⏳ Procesando foto y enviando registro...", false, true);
 
-  // --- Procesar la foto ---
+  // --- Procesar/Comprimir la foto ---
+  let fotoBase64 = null, approxBytes = 0, originalSize = 0;
   try {
-      fotoSize = fotoInput.files[0].size;
-      console.log("Intentando convertir imagen a Base64...");
-      fotoBase64 = await convertirImagenABase64(fotoInput.files[0]);
-      base64Length = fotoBase64 ? fotoBase64.length : 0;
-      console.log("Conversión a Base64 exitosa. Tamaño Base64:", base64Length);
-      if (!fotoBase64) throw new Error("convertirImagenABase64 devolvió vacío.");
+    originalSize = fotoInput.files[0].size;
+    const result = await convertirImagenABase64(fotoInput.files[0]);
+    fotoBase64 = result.base64;
+    approxBytes = result.approxBytes;
 
+    if (!fotoBase64) throw new Error("La conversión a Base64 devolvió vacío.");
+    if (fotoBase64.length > MAX_BASE64_CHARS) {
+      return mostrarMensaje("❌ La foto quedó muy pesada. Tomá una foto más cercana o con menos zoom/flash.", true);
+    }
   } catch (imgError) {
-      console.error("Error FATAL convirtiendo imagen a Base64:", imgError);
-      fetch('https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-              source: "convertirImagenABase64_Error", message: imgError.message, stack: imgError.stack,
-              originalFileSize: fotoSize, userAgent: navigator.userAgent
-          }),
-          keepalive: true }).catch(logErr => console.error("Error enviando log:", logErr));
-      mostrarMensaje("❌ Error crítico al procesar la foto. Notificado.", true);
-      return;
+    console.error("Error al procesar la foto:", imgError);
+    // Log espía sin keepalive
+    fetch('https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: "convertirImagenABase64_Error",
+        message: imgError.message, stack: imgError.stack,
+        originalFileSize: originalSize, approxBytes, userAgent: navigator.userAgent
+      })
+    }).catch(() => {});
+    mostrarMensaje("❌ Error al procesar la foto (formato/tamaño).", true);
+    return;
   }
 
-  // --- Preparar datos finales (foto incluida) ---
+  // --- Payload final ---
   const datos = {
-    funcion: "registro_km", usuario: empleado, patrulla: getSector(empleado) || "",
-    patente, km_final: kmFinal, fecha: fechaHora, foto: fotoBase64
+    funcion: "registro_km",
+    usuario: empleado,
+    patrulla: getSector(empleado) || "",
+    patente,
+    km_final: kmFinal,
+    fecha: fechaHora,
+    foto: fotoBase64
   };
 
-  // --- Intentar enviar ---
+  // --- Envío ---
   try {
     if (enviarKM._inflight) { console.warn("Envío duplicado prevenido."); return; }
     enviarKM._inflight = true;
-    console.log("Intentando enviar datos a n8n...");
-    const respuesta = await fetchJSONWithRetry(
-      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", // URL Principal
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) },
-      { metadata: { originalFileSize: fotoSize, base64Length: base64Length } }
-    );
-    console.log("Respuesta recibida de n8n:", respuesta);
 
-    // --- Procesar respuesta ---
+    const respuesta = await fetchJSONWithRetry(
+      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) },
+      { metadata: { approxBytes, originalSize } }
+    );
+
     const mensaje = respuesta?.Mensaje;
     if (!mensaje || typeof mensaje !== "string") {
       mostrarMensaje("❌ Respuesta inválida del servidor.", true);
@@ -246,13 +327,12 @@ async function enviarKM() {
       mostrarMensaje(`❌ Error: ${mensaje}`, true);
     }
   } catch (fetchError) {
-     console.error("Error durante fetchJSONWithRetry:", fetchError);
-     mostrarMensaje(fetchError.message || "❌ Conexión inestable: reintentá.", true);
+    console.error("Error durante fetchJSONWithRetry:", fetchError);
+    mostrarMensaje(fetchError.message || "❌ Conexión inestable: reintentá.", true);
   } finally {
     enviarKM._inflight = false;
   }
 }
-
 
 async function enviarEtiqueta() {
   const empleado = document.getElementById("employeeName").textContent;
@@ -265,9 +345,8 @@ async function enviarEtiqueta() {
     mostrarMensaje("⏳ Enviando pedido al servidor... Esperando respuesta...");
     const payload = { funcion: "pedir_etiquetas", usuario: empleado, patrulla: getSector(empleado) || "", cantidad, fecha: fechaHora };
     const data = await fetchJSONWithRetry(
-      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
-      }
+      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
     );
     const etiquetasDiv = document.getElementById("etiquetasAsignadas");
     const listaUl = document.getElementById("listaEtiquetas");
@@ -302,9 +381,8 @@ async function registrarEtiquetas() {
   mostrarMensaje("⏳ Registrando nuevas etiquetas...");
   try {
     const respuesta = await fetchJSONWithRetry(
-      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos)
-      }
+      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) }
     );
     if (!respuesta || typeof respuesta.Mensaje !== "string") return mostrarMensaje("❌ Respuesta inválida del servidor.", true);
     const mensaje = respuesta.Mensaje;
@@ -339,15 +417,22 @@ async function obtenerHistorialEtiquetas() {
   mostrarMensaje("Consultando historial de etiquetas...");
   try {
     const respuesta = await fetchJSONWithRetry(
-      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ funcion: "historial_etiquetas", usuario: username, patrulla: getSector(username) || "" })
-    });
+      }
+    );
     let mensaje = Array.isArray(respuesta) ? respuesta[0]?.Mensaje : respuesta?.Mensaje;
     const contenidoHistorial = mensaje ? formatearHistorial(mensaje) : "<p>No se encontró historial.</p>";
     const panelHistorial = document.getElementById("panelMisEtiquetas");
     const contenidoDiv = document.getElementById("contenidoHistorial");
-    if (!panelHistorial || !contenidoDiv) { console.error("Error: Elementos 'panelMisEtiquetas' o 'contenidoHistorial' no encontrados."); mostrarMensaje("❌ Error al mostrar historial.", true); return; }
+    if (!panelHistorial || !contenidoDiv) {
+      console.error("Error: Elementos 'panelMisEtiquetas' o 'contenidoHistorial' no encontrados.");
+      mostrarMensaje("❌ Error al mostrar historial.", true);
+      return;
+    }
     contenidoDiv.innerHTML = contenidoHistorial;
     document.getElementById("panelMensajes")?.classList.add("hidden");
     panelHistorial.classList.remove("hidden");
@@ -355,8 +440,13 @@ async function obtenerHistorialEtiquetas() {
     mostrarMensaje("❌ Error al consultar el historial.", true);
   }
 }
+
 function formatearHistorial(mensajeN8N) {
-  return mensajeN8N.split("\n\n").filter(b => b.trim() !== "").map(b => `<p>${b.replace(/\n/g, "<br>")}</p>`).join("");
+  return mensajeN8N
+    .split("\n\n")
+    .filter(b => b.trim() !== "")
+    .map(b => `<p>${b.replace(/\n/g, "<br>")}</p>`)
+    .join("");
 }
 
 /* ===========================
@@ -367,8 +457,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
   if (usernameInput && passwordInput) {
-      [usernameInput, passwordInput].forEach(i => i.addEventListener("keypress", (e) => e.key === "Enter" && login()));
-  } else { console.error("Error: Inputs de username/password no encontrados."); }
+    [usernameInput, passwordInput].forEach(i =>
+      i.addEventListener("keypress", (e) => e.key === "Enter" && login())
+    );
+  } else {
+    console.error("Error: Inputs de username/password no encontrados.");
+  }
+
   const fotoInput = document.getElementById("fotoOdometro");
   if (fotoInput) {
     fotoInput.addEventListener("change", (e) => {
