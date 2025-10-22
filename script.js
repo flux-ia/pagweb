@@ -2,18 +2,18 @@
   Helpers de red y multimedia
   =========================== */
 
-// Detectar si la conexión es celular para ajustar timeout
+// Detectar si la conexión es celular
 function isCellular() {
   const c = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
   return !!(c && (c.type === 'cellular' || (c.effectiveType && /2g|3g|slow-2g/.test(c.effectiveType))));
 }
 
-// SIMPLIFICADO: Solo convierte a Base64, sin compresión/redimensión
+// Convierte imagen a Base64
 function convertirImagenABase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]); // Devuelve solo la parte Base64
-    reader.onerror = (error) => reject(new Error("Error al procesar la foto: " + error));
+    reader.onload = () => resolve(reader.result.split(",")[1]); // Solo Base64
+    reader.onerror = (error) => reject(new Error("Error al procesar la foto: " + error.message)); // Mensaje más claro
     reader.readAsDataURL(file);
   });
 }
@@ -21,13 +21,13 @@ function convertirImagenABase64(file) {
 // Wrapper de fetch con timeout, reintentos y log de errores
 async function fetchJSONWithRetry(url, options, {
   tries = 3,
-  timeoutMs = 60000 // Timeout en 60 segundos
+  timeoutMs = 60000, // Timeout 60 segundos
+  metadata = {}
 } = {}) {
 
-  // URL del webhook espía (con el nuevo dominio)
-  const ERROR_WEBHOOK_URL = 'https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14';
-
+  const ERROR_WEBHOOK_URL = 'https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14'; // URL Espía
   let wait = 800;
+
   for (let i = 0; i < tries; i++) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -35,27 +35,27 @@ async function fetchJSONWithRetry(url, options, {
     try {
       const res = await fetch(url, { ...options, signal: ctrl.signal, cache: 'no-store', keepalive: true });
       clearTimeout(t);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+      if (!res.ok) throw new Error('HTTP ' + res.status); // Lanza error si la respuesta no es OK (ej: 500)
       const text = await res.text();
       try { return text ? JSON.parse(text) : {}; } catch { return { raw: text }; }
 
     } catch (error) {
       clearTimeout(t);
+      // Prepara datos del error, incluyendo metadata
       const errorData = {
-        message: error.message,
-        name: error.name,
-        stack: error.stack,
-        url: url,
-        attempt: i + 1,
-        userAgent: navigator.userAgent
+        source: "fetchJSONWithRetry_Error", message: error.message, name: error.name, stack: error.stack,
+        url: url, attempt: i + 1, userAgent: navigator.userAgent, ...metadata
       };
+      // Envía error al webhook espía
       fetch(ERROR_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(errorData),
-        keepalive: true
-      });
-      if (i === tries - 1) throw error;
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(errorData), keepalive: true
+      }).catch(logErr => console.error("Error enviando log:", logErr)); // Log si falla el envío del log
+
+      if (i === tries - 1) { // Si es el último intento, lanza el error para que lo vea el usuario
+          console.error(`Fetch falló después de ${tries} intentos:`, error);
+          throw error;
+      }
       await new Promise(s => setTimeout(s, wait));
       wait = Math.min(wait * 2, 4000);
     }
@@ -65,7 +65,6 @@ async function fetchJSONWithRetry(url, options, {
 /* ===========================
   Datos de usuarios / sectores
   =========================== */
-
 const usuarios = { gaston: "gaston1", adm: "adm1", admin_laplata: "adminlp1", admin_cordoba: "admincba1", admin_rioiv: "adminrio1", admin_bahiablanca: "adminbb1", admin_sanluis: "adminsl1", admin_salta: "adminsa1", admin_tucuman: "admintuc1", behm: "behm123", bocchetto: "boc123", bucala: "bucala123", chiner: "chiner123", estebaneugenia: "estebaneugenia1", estebanluciana: "estebanluciana", fernandezgaston: "fernandezgaston1", fernandezjuan: "fernandezjuan1", laubert: "laubert123", machaca: "machaca123", vaghioscar: "vaghioscar123", vaghipablo: "vaghipablo123", vaghiroque: "vaghiroque456", aguirrez: "aguirrez1", alarcon: "alarcon1", alejo: "alejo1", aranda: "aranda1", barraza: "barraza1", batistini: "batistini1", beltran: "beltran123", caceres: "caceres123", calderon: "calderon1", cancino: "cancino123", cañette: "cañette123", ceballos: "ceballos1", cimino: "cimino123", cruz: "cruz123", diazluis: "diazluis1", diazmanuel: "diazmanuel1", figueroa: "figueroa1", galeassialexis: "galeassialexis1", galeassieric: "galeassieric1", gallegos: "gallegos123", griecco: "griecco123", gutierrez: "gutierrez123", iglesiaspedro: "iglesiaspedro", iglesiashugo: "iglesiashugo", kunz: "kunz123", lagos: "lagos123", madariaga: "madariaga123", mas: "mas123", medinaalvaro: "medinaalvaro", medinaenzo: "medinaenzo", navarro: "navarro123", nieva: "nieva123", olleta: "olleta123", ortizalejandro: "ortiz123", ortizoscar: "ortiz456", paz: "paz123", presentado: "presentado123", quintaye: "quintaye123", quiroga: "quiroga123", rios: "rios123", ruiz: "ruiz123", sanchez: "sanchez123", sartori: "sartori123", serrano: "serrano123", tejedaadrian: "tejedaadrian", tejedaaldo: "tejedaaldo", trovato: "trovato123", vaghiroque: "vaghi", zelaya: "zelaya" };
 const userRole = { adm: "SUPERADMIN", admin_laplata: "ADMIN", admin_cordoba: "ADMIN", admin_rioiv: "ADMIN", admin_bahiablanca: "ADMIN", admin_sanluis: "ADMIN", admin_salta: "ADMIN", admin_tucuman: "ADMIN" };
 const getRole = (u) => userRole[u] || "TECNICO";
@@ -87,7 +86,7 @@ function login() {
   const role = getRole(username);
   document.getElementById("panelMensajes")?.classList.add("hidden");
   const contenidoMensaje = document.getElementById("contenidoMensaje");
-  if (contenidoMensaje) contenidoMensaje.innerHTML = ""; // Limpiar mensaje anterior
+  if (contenidoMensaje) contenidoMensaje.innerHTML = "";
   document.getElementById("loginScreen").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
   document.getElementById("employeeName").textContent = username;
@@ -168,58 +167,89 @@ function populatePatentesForUser(username) {
   Envíos: KM / Etiquetas
   =========================== */
 
-// ✅ ENVIAR REGISTRO DE KM (Modificado para NO requerir foto)
-// ✅ ENVIAR REGISTRO DE KM (Restaurado para incluir foto, con más logging)
+// ✅ ENVIAR REGISTRO DE KM (Foto requerida, con logging y captura de errores)
 async function enviarKM() {
-  // ... obtiene patente, km, etc. ...
-  const fotoInput = document.getElementById("fotoOdometro");
-
-  // Verifica campos obligatorios (patente y km)
-  if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá patente y KM.", true);
-  // Verifica si se seleccionó una foto (VUELVE A SER OBLIGATORIA EN ESTA VERSIÓN)
-  if (!fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir la foto.", true);
-
-  // ... muestra mensaje "Procesando..." ...
-  let fotoBase64 = null;
-  // ... inicializa variables de tamaño ...
-
-  // --- Bloque de manejo de foto ---
-  if (fotoInput.files[0]) { // Si hay archivo...
-      fotoSize = fotoInput.files[0].size;
-      try {
-          // ... Intenta convertir ...
-          fotoBase64 = await convertirImagenABase64(fotoInput.files[0]); // <-- CONVIERTE
-          // ... loguea éxito ...
-      } catch (imgError) {
-          // ... maneja error de conversión ...
-          return;
-      }
-  }
-  // --- Fin bloque de foto ---
-
-  // Prepara datos. Incluye 'foto' SI fotoBase64 no es null
-  const datos = {
-    // ... otros datos ...
-    ...(fotoBase64 && { foto: fotoBase64 }) // <-- AÑADE LA FOTO AQUÍ
-  };
+  let empleado, patente, kmFinal, fotoInput, fechaHora, fotoSize = 0, base64Length = 0, fotoBase64 = null;
 
   try {
-    // ...
-    // Envía el objeto 'datos' completo (con o sin foto)
+    empleado = document.getElementById("employeeName").textContent;
+    patente = document.getElementById("patente").value;
+    kmFinal = document.getElementById("kmFinal").value;
+    fotoInput = document.getElementById("fotoOdometro");
+    fechaHora = new Date().toLocaleString();
+
+    if (!patente || !kmFinal) return mostrarMensaje("🚗 Completá patente y KM.", true);
+    if (!fotoInput || !fotoInput.files[0]) return mostrarMensaje("📷 Tenés que subir la foto.", true);
+
+  } catch (initError) {
+      console.error("Error inicial obteniendo datos:", initError);
+      mostrarMensaje("❌ Error inesperado al preparar datos.", true);
+      fetch('https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: "enviarKM_InitError", message: initError.message, stack: initError.stack, userAgent: navigator.userAgent }),
+          keepalive: true }).catch(logErr => console.error("Error enviando log:", logErr));
+      return;
+  }
+
+  mostrarMensaje("⏳ Procesando foto y enviando registro...", false, true);
+
+  // --- Procesar la foto ---
+  try {
+      fotoSize = fotoInput.files[0].size;
+      console.log("Intentando convertir imagen a Base64...");
+      fotoBase64 = await convertirImagenABase64(fotoInput.files[0]);
+      base64Length = fotoBase64 ? fotoBase64.length : 0;
+      console.log("Conversión a Base64 exitosa. Tamaño Base64:", base64Length);
+      if (!fotoBase64) throw new Error("convertirImagenABase64 devolvió vacío.");
+
+  } catch (imgError) {
+      console.error("Error FATAL convirtiendo imagen a Base64:", imgError);
+      fetch('https://n8n.fluxia.com.ar/webhook/c4d5c678-faa3-467c-9344-14e035e4ed14', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              source: "convertirImagenABase64_Error", message: imgError.message, stack: imgError.stack,
+              originalFileSize: fotoSize, userAgent: navigator.userAgent
+          }),
+          keepalive: true }).catch(logErr => console.error("Error enviando log:", logErr));
+      mostrarMensaje("❌ Error crítico al procesar la foto. Notificado.", true);
+      return;
+  }
+
+  // --- Preparar datos finales (foto incluida) ---
+  const datos = {
+    funcion: "registro_km", usuario: empleado, patrulla: getSector(empleado) || "",
+    patente, km_final: kmFinal, fecha: fechaHora, foto: fotoBase64
+  };
+
+  // --- Intentar enviar ---
+  try {
+    if (enviarKM._inflight) { console.warn("Envío duplicado prevenido."); return; }
+    enviarKM._inflight = true;
+    console.log("Intentando enviar datos a n8n...");
     const respuesta = await fetchJSONWithRetry(
-      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datos) // <-- ENVÍA LOS DATOS
-      },
-      // ... metadata ...
+      "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", // URL Principal
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) },
+      { metadata: { originalFileSize: fotoSize, base64Length: base64Length } }
     );
-    // ... maneja respuesta ...
-  } catch (error) {
-     // ... maneja error de fetch ...
+    console.log("Respuesta recibida de n8n:", respuesta);
+
+    // --- Procesar respuesta ---
+    const mensaje = respuesta?.Mensaje;
+    if (!mensaje || typeof mensaje !== "string") {
+      mostrarMensaje("❌ Respuesta inválida del servidor.", true);
+    } else if (mensaje === "Registro guardado correctamente") {
+      mostrarMensaje(`✅ Registro exitoso!<br><b>Patente:</b> ${patente}<br><b>KM:</b> ${kmFinal}`);
+      document.getElementById("kmFinal").value = "";
+      document.getElementById("fotoOdometro").value = "";
+      document.getElementById("fotoPreview").style.display = "none";
+    } else {
+      mostrarMensaje(`❌ Error: ${mensaje}`, true);
+    }
+  } catch (fetchError) {
+     console.error("Error durante fetchJSONWithRetry:", fetchError);
+     mostrarMensaje(fetchError.message || "❌ Conexión inestable: reintentá.", true);
   } finally {
-    // ...
+    enviarKM._inflight = false;
   }
 }
 
@@ -236,9 +266,7 @@ async function enviarEtiqueta() {
     const payload = { funcion: "pedir_etiquetas", usuario: empleado, patrulla: getSector(empleado) || "", cantidad, fecha: fechaHora };
     const data = await fetchJSONWithRetry(
       "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
       }
     );
     const etiquetasDiv = document.getElementById("etiquetasAsignadas");
@@ -250,16 +278,10 @@ async function enviarEtiqueta() {
     }
     const etiquetas = Array.isArray(data.etiquetas) ? data.etiquetas : [data.etiquetas];
     etiquetasDiv.style.display = "block";
-    etiquetas.forEach(etq => {
-      const li = document.createElement("li");
-      li.textContent = etq;
-      listaUl.appendChild(li);
-    });
+    etiquetas.forEach(etq => { const li = document.createElement("li"); li.textContent = etq; listaUl.appendChild(li); });
     localStorage.setItem("etiquetasAsignadas", JSON.stringify(etiquetas));
     let msg = `✅ Pedido procesado correctamente.<br><b>Cantidad solicitada:</b> ${cantidad}<br><b>Fecha:</b> ${fechaHora}<br><br><b>Etiquetas asignadas:</b><br>${etiquetas.join("<br>")}`;
-    if (etiquetas.length < cantidad) {
-      msg += `<br><br><b>⚠️ Solo había ${etiquetas.length} disponible(s).</b>`;
-    }
+    if (etiquetas.length < cantidad) msg += `<br><br><b>⚠️ Solo había ${etiquetas.length} disponible(s).</b>`;
     mostrarMensaje(msg);
   } catch (err) {
     mostrarMensaje(err.message || "❌ Error desconocido al pedir etiquetas.", true);
@@ -273,34 +295,21 @@ async function registrarEtiquetas() {
   const hasta = parseInt(document.getElementById("etiquetaFin").value);
   const empleado = document.getElementById("employeeName").textContent;
   const fechaHora = new Date().toLocaleString();
-  if (isNaN(desde) || isNaN(hasta) || desde < 0 || hasta < desde) {
-    return mostrarMensaje("❌ Por favor ingresá un rango válido.", true);
-  }
+  if (isNaN(desde) || isNaN(hasta) || desde < 0 || hasta < desde) return mostrarMensaje("❌ Por favor ingresá un rango válido.", true);
   const etiquetas = [];
-  for (let i = desde; i <= hasta; i++) {
-    etiquetas.push(`ETQ-${String(i).padStart(3, "0")}`);
-  }
+  for (let i = desde; i <= hasta; i++) etiquetas.push(`ETQ-${String(i).padStart(3, "0")}`);
   const datos = { funcion: "registro_etiquetas_admin", usuario: empleado, patrulla: getSector(empleado) || "", fecha: fechaHora, etiquetas };
-
   mostrarMensaje("⏳ Registrando nuevas etiquetas...");
-
   try {
     const respuesta = await fetchJSONWithRetry(
       "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datos)
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos)
       }
     );
-    if (!respuesta || typeof respuesta.Mensaje !== "string") {
-      return mostrarMensaje("❌ Respuesta inválida del servidor.", true);
-    }
+    if (!respuesta || typeof respuesta.Mensaje !== "string") return mostrarMensaje("❌ Respuesta inválida del servidor.", true);
     const mensaje = respuesta.Mensaje;
-    if (mensaje.toLowerCase().includes("ya existen")) {
-      mostrarMensaje(`❌ Error: ${mensaje}`, true);
-    } else {
-      mostrarMensaje(`✅ ${mensaje}<br><br><b>Etiquetas:</b><br>${etiquetas.join("<br>")}<br><br><b>Fecha:</b> ${fechaHora}`);
-    }
+    if (mensaje.toLowerCase().includes("ya existen")) mostrarMensaje(`❌ Error: ${mensaje}`, true);
+    else mostrarMensaje(`✅ ${mensaje}<br><br><b>Etiquetas:</b><br>${etiquetas.join("<br>")}<br><br><b>Fecha:</b> ${fechaHora}`);
   } catch (err) {
     mostrarMensaje("❌ No se pudo registrar las etiquetas en el servidor.", true);
   }
@@ -313,17 +322,11 @@ async function registrarEtiquetas() {
 function mostrarMensaje(mensaje, esError = false, esLoader = false) {
   const panel = document.getElementById("panelMensajes");
   const contenido = document.getElementById("contenidoMensaje");
-
-  if (!panel || !contenido) {
-      console.error("Error: No se encuentran los elementos 'panelMensajes' o 'contenidoMensaje' en el HTML.");
-      return;
-  }
-
+  if (!panel || !contenido) { console.error("Error: Elementos 'panelMensajes' o 'contenidoMensaje' no encontrados."); return; }
   contenido.innerHTML = esLoader ? `<div class="loader"></div><br>${mensaje}` : mensaje;
   contenido.style.color = esError ? "red" : "black";
-
-  ocultarTodosLosFormularios(); // Oculta otros formularios
-  panel.classList.remove("hidden"); // Muestra el panel de mensajes
+  ocultarTodosLosFormularios();
+  panel.classList.remove("hidden");
 }
 
 /* ===========================
@@ -333,29 +336,18 @@ function mostrarMensaje(mensaje, esError = false, esLoader = false) {
 async function obtenerHistorialEtiquetas() {
   const username = document.getElementById("employeeName").textContent;
   if (!username) return mostrarMensaje("Error: Usuario no identificado");
-
   mostrarMensaje("Consultando historial de etiquetas...");
-
   try {
     const respuesta = await fetchJSONWithRetry(
       "https://n8n.fluxia.com.ar/webhook/79ad7cbc-afc5-4d9b-967f-4f187d028a20", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ funcion: "historial_etiquetas", usuario: username, patrulla: getSector(username) || "" })
     });
-
     let mensaje = Array.isArray(respuesta) ? respuesta[0]?.Mensaje : respuesta?.Mensaje;
     const contenidoHistorial = mensaje ? formatearHistorial(mensaje) : "<p>No se encontró historial.</p>";
-
     const panelHistorial = document.getElementById("panelMisEtiquetas");
     const contenidoDiv = document.getElementById("contenidoHistorial");
-
-    if (!panelHistorial || !contenidoDiv) {
-        console.error("Error: No se encuentran los elementos 'panelMisEtiquetas' o 'contenidoHistorial' en el HTML.");
-        mostrarMensaje("❌ Error al mostrar el historial.", true);
-        return;
-    }
-
+    if (!panelHistorial || !contenidoDiv) { console.error("Error: Elementos 'panelMisEtiquetas' o 'contenidoHistorial' no encontrados."); mostrarMensaje("❌ Error al mostrar historial.", true); return; }
     contenidoDiv.innerHTML = contenidoHistorial;
     document.getElementById("panelMensajes")?.classList.add("hidden");
     panelHistorial.classList.remove("hidden");
@@ -363,7 +355,6 @@ async function obtenerHistorialEtiquetas() {
     mostrarMensaje("❌ Error al consultar el historial.", true);
   }
 }
-
 function formatearHistorial(mensajeN8N) {
   return mensajeN8N.split("\n\n").filter(b => b.trim() !== "").map(b => `<p>${b.replace(/\n/g, "<br>")}</p>`).join("");
 }
@@ -376,13 +367,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
   if (usernameInput && passwordInput) {
-      [usernameInput, passwordInput].forEach(i =>
-          i.addEventListener("keypress", (e) => e.key === "Enter" && login())
-      );
-  } else {
-      console.error("Error: No se encuentran los inputs de username o password.");
-  }
-
+      [usernameInput, passwordInput].forEach(i => i.addEventListener("keypress", (e) => e.key === "Enter" && login()));
+  } else { console.error("Error: Inputs de username/password no encontrados."); }
   const fotoInput = document.getElementById("fotoOdometro");
   if (fotoInput) {
     fotoInput.addEventListener("change", (e) => {
@@ -397,16 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ✅ Bloque final para exportar funciones al ámbito global.
 Object.assign(window, {
-  login,
-  showKmForm,
-  showEtiquetaForm,
-  showCargaEtiquetas,
-  volver,
-  enviarKM,
-  enviarEtiqueta,
-  registrarEtiquetas,
-  obtenerHistorialEtiquetas
+  login, showKmForm, showEtiquetaForm, showCargaEtiquetas, volver,
+  enviarKM, enviarEtiqueta, registrarEtiquetas, obtenerHistorialEtiquetas
 });
-
