@@ -125,7 +125,7 @@ const userSector = {
   aranda: "CÓRDOBA", barraza: "CÓRDOBA", caceres: "CÓRDOBA", calderon: "CÓRDOBA", cañette: "CÓRDOBA",
   galeassialexis: "CÓRDOBA", galeassieric: "CÓRDOBA", gallegos: "CÓRDOBA", griecco: "CÓRDOBA", iglesiaspedro: "CÓRDOBA",
   iglesiashugo: "CÓRDOBA", presentado: "CÓRDOBA", quiroga: "CÓRDOBA", rios: "CÓRDOBA", sanchez: "CÓRDOBA", tejedaadrian: "CÓRDOBA",
-  batistini: "RÍO IV", ceballos: "RÍO IV", figueroa: "RÍO IV", kunz: "kunz123", lagos: "lagos123",
+  batistini: "RÍO IV", ceballos: "RÍO IV", figueroa: "RÍO IV", kunz: "RÍO IV", lagos: "RÍO IV",
   quintaye: "BAHÍA BLANCA", trovato: "BAHÍA BLANCA", cancino: "SAN LUIS", cimino: "SALTA", diazluis: "SALTA", diazmanuel: "SALTA",
   madariaga: "SALTA", medinaenzo: "TUCUMÁN"
 };
@@ -482,3 +482,4 @@ Object.assign(window, {
   login, showKmForm, showEtiquetaForm, showCargaEtiquetas, volver,
   enviarKM, enviarEtiqueta, registrarEtiquetas, obtenerHistorialEtiquetas
 });
+
